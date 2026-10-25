@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "Se usi o riadatti questo progetto, cita l'autore così:"
+title: "Generatore Campionato Baskin (generatore-calendari-baskin-excel)"
+authors:
+  - family-names: "Lolli"
+    given-names: "Daniele"
+    alias: "UncleDan"
+repository-code: "https://github.com/baskin-software/generatore-calendari-baskin-excel"
+license: MIT
+type: software
