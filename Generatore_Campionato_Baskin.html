@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Generatore_Campionato_Baskin.html by Daniele Lolli (UncleDan) feat. Claude AI - Release 1.31 - 2026-10-24 10-53-12 -->
+<!-- Generatore_Campionato_Baskin.html by Daniele Lolli (UncleDan) feat. Claude AI - Release 1.34 - 2026-10-25 15-46-49 -->
 <html lang="it">
 <head>
 <meta charset="utf-8">
@@ -193,7 +193,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 28px}
 </ul>
 </div>
 </section>
-<p class="rev">Generatore Campionato Baskin · Release 1.31 del 2026-10-24 10-53-12 · © 2026 Daniele Lolli (UncleDan) feat. Claude AI · <a href="https://github.com/UncleDan/classifica-basket-baskin-excel" target="_blank" rel="noopener">GitHub</a> · licenza MIT (codice) e CC BY 4.0 (modelli)</p>
+<p class="rev">Generatore Campionato Baskin · Release 1.34 del 2026-10-25 15-46-49 · © 2026 Daniele Lolli (UncleDan) feat. Claude AI · <a href="https://github.com/baskin-software/generatore-calendari-baskin-excel" target="_blank" rel="noopener">GitHub</a> · licenza MIT (codice) e CC BY 4.0 (modelli)</p>
 </footer>
 <div id="gofab"><button type="button" onclick="document.getElementById('go').click()">Genera xlsx</button></div>
 <script>
@@ -601,6 +601,8 @@ async function generate(opt) {
     }
   }
   { const x = ws.cell(13, 6); x.s = TC[13][5][1]; setv(x, 'FC'); }
+  // link alle istruzioni per l'uso del file, accanto ai parametri
+  { const x = ws.cell(1, 6); x.s = 51; setv(x, '=HYPERLINK("https://github.com/baskin-software/generatore-calendari-baskin-excel/blob/main/ISTRUZIONI.md","Istruzioni per l\'uso del file: cosa compilare e cosa non fare (clic per aprire)")'); ws.merge('F1:L1'); }
   ws.merge('B12:W12'); ws.merge(slotcol(1) + '12:' + slotcol(NT) + '12'); for (let b = 0; b < 4; b++) ws.merge(bcol(b, 1) + '12:' + bcol(b, NT) + '12');
   const D = col => 'Dati!$' + col + '$2:$' + col + '$' + DATI_LAST;
   // scontri diretti per codice squadra: le colonne dei posti (slot) contengono i codici
@@ -1242,7 +1244,7 @@ async function generate(opt) {
       ['n', '="Controllo: gare nei calendari "&(' + CALS.map(n => 'COUNT(' + qS(n) + '$A:$A)').join('+') + ')&", gare contate in classifica "&COUNT(Dati!$S$2:$S$' + DATI_LAST + ')&IF((' + CALS.map(n => 'COUNT(' + qS(n) + '$A:$A)').join('+') + ')<>COUNT(Dati!$S$2:$S$' + DATI_LAST + '),"  -  ATTENZIONE: controllare i numeri di gara (ripetuti, mancanti o oltre ' + (SPN + SP) + ')","  -  OK")']]
       : [['n', '* Riferimenti FISSI (versione piu\' leggera): classifiche, RIEPILOGO, Calendario.ics e Designazioni puntano a celle precise dei calendari. Non spostare, copiare o aggiungere gare a mano (non verrebbero contate): per cambiare la struttura rigenerare il file dal generatore.']]),
     ...(opt.data && opt.data.origine ? [['n', '* Dati importati da: ' + opt.data.origine + '.']] : []),
-    ['n', '* Creato con il Generatore Campionato Baskin di Daniele Lolli (UncleDan), https://github.com/UncleDan/classifica-basket-baskin-excel - codice MIT, modelli CC BY 4.0. Il file con i tuoi dati e\' tuo: questa riga e\' gradita ma si puo\' togliere.']
+    ['n', '* Creato con il Generatore Campionato Baskin di Daniele Lolli (UncleDan), https://github.com/baskin-software/generatore-calendari-baskin-excel - codice MIT, modelli CC BY 4.0. Il file con i tuoi dati e\' tuo: questa riga e\' gradita ma si puo\' togliere.']
   ];
   M.forEach((m, i) => { if (m) copyRow('MEMO', m[0] === 't' ? 1 : m[0] === 'h' ? 4 : 3, mw, i + 1, { over: { 1: m[1] } }); });
 
