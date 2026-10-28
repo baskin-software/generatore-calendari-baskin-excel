@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Generatore_Campionato_Baskin.html by Daniele Lolli (UncleDan) feat. Claude AI - Release 1.34 - 2026-10-25 15-46-49 -->
+<!-- Generatore_Campionato_Baskin.html by Daniele Lolli (UncleDan) feat. Claude AI - Release 1.41 - 2026-10-28 17-39-32 -->
 <html lang="it">
 <head>
 <meta charset="utf-8">
@@ -129,13 +129,21 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 28px}
 </section>
 <section class="card">
 <h2>Playoff</h2>
-<p class="hint">Squadre: 0 (nessun playoff) oppure da 2 a 64. Qualificate per girone × gironi deve dare il numero di squadre. Se il numero non è una potenza di 2 (es. 12) il tabellone si completa con dei BYE come nel tennis: le teste di serie migliori passano il primo turno senza giocare.</p>
+<p class="hint">Squadre: 0 (nessun playoff) oppure da 2 a 64. Qualificate per girone × gironi deve dare il numero di squadre: cambiando le squadre o i gironi del playoff le qualificate per girone si aggiornano da sole (es. 8 squadre da un girone unico = 8 qualificate). Se il numero non è una potenza di 2 (es. 12) il tabellone si completa con dei BYE come nel tennis: le teste di serie migliori passano il primo turno senza giocare.</p>
 <div class="grid2">
 <label>Squadre<input id="po" type="number" autocomplete="off" min="0" max="64" value="8"></label>
 <label>Qualificate per girone<input id="poq" type="number" autocomplete="off" min="1" max="40" value="8"></label>
 <label>Gironi (es. A,B oppure A-D; vuoto = tutti)<input id="pog" type="text" value="" autocomplete="off"></label>
 </div>
-<label class="chk" style="margin-top:10px"><input id="par" type="checkbox" autocomplete="off"> Andata e ritorno: ogni turno prima delle finali si gioca in due gare (al ritorno le squadre si scambiano il campo) e passa chi ha la migliore differenza canestri nel totale; in caso di parità si indica a mano chi passa (A o B nella riga dell'esito). Le finali restano in gara unica. Vale anche per il Torneo Primavera; non si applica ai tabelloni importati con lo schema del file di origine, dove le sfide di andata e ritorno vengono riconosciute da sole.</label>
+<div style="margin-top:10px;font-size:13px;color:var(--mut)">Turni con andata e ritorno (le altre gare e le finali 3°-4° e 1°-2° restano in gara unica):</div>
+<div style="display:flex;flex-wrap:wrap;gap:4px 14px">
+<label class="chk"><input class="par" value="64" type="checkbox" autocomplete="off"> Trentaduesimi</label>
+<label class="chk"><input class="par" value="32" type="checkbox" autocomplete="off"> Sedicesimi</label>
+<label class="chk"><input class="par" value="16" type="checkbox" autocomplete="off"> Ottavi</label>
+<label class="chk"><input class="par" value="8" type="checkbox" autocomplete="off"> Quarti</label>
+<label class="chk"><input class="par" value="4" type="checkbox" autocomplete="off"> Semifinali</label>
+</div>
+<p class="hint" style="margin-top:4px">Nei turni spuntati ogni sfida si gioca in due gare (al ritorno le squadre si scambiano il campo) e passa chi ha la migliore differenza canestri nel totale; in caso di parità si indica a mano chi passa (A o B nella riga dell'esito). Esempio: quarti in gara secca e semifinali andata e ritorno = spuntare solo "Semifinali". Vale anche per il Torneo Primavera; non si applica ai tabelloni importati con lo schema del file di origine, dove le sfide di andata e ritorno vengono riconosciute da sole.</p>
 <h2 style="margin-top:14px">Torneo Primavera (facoltativo)</h2>
 <p class="hint">Seconda griglia per le squadre non qualificate al tabellone principale: prende le posizioni successive negli stessi gironi del playoff (es. playoff con le prime 4, Primavera con le 4 successive).</p>
 <div class="grid2">
@@ -193,7 +201,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 28px}
 </ul>
 </div>
 </section>
-<p class="rev">Generatore Campionato Baskin · Release 1.34 del 2026-10-25 15-46-49 · © 2026 Daniele Lolli (UncleDan) feat. Claude AI · <a href="https://github.com/baskin-software/generatore-calendari-baskin-excel" target="_blank" rel="noopener">GitHub</a> · licenza MIT (codice) e CC BY 4.0 (modelli)</p>
+<p class="rev">Generatore Campionato Baskin · Release 1.41 del 2026-10-28 17-39-32 · © 2026 Daniele Lolli (UncleDan) feat. Claude AI · <a href="https://github.com/baskin-software/generatore-calendari-baskin-excel" target="_blank" rel="noopener">GitHub</a> · licenza MIT (codice) e CC BY 4.0 (modelli)</p>
 </footer>
 <div id="gofab"><button type="button" onclick="document.getElementById('go').click()">Genera xlsx</button></div>
 <script>
@@ -335,7 +343,7 @@ function serialize(sh, extraPre) {
     const cs = [...R.cells.keys()].sort((a, b) => a - b);
     for (const c of cs) {
       const x = R.cells.get(c), ref = CL(c) + r, st = x.s ? ' s="' + x.s + '"' : '';
-      if (x.k === 'f') s += '<c r="' + ref + '"' + st + '><f>' + esc(x.v) + '</f></c>';
+      if (x.k === 'f') s += '<c r="' + ref + '"' + st + '><f' + (x.arr ? ' t="array" ref="' + ref + '"' : '') + '>' + esc(x.v) + '</f></c>';   // arr: formula matriciale (Google Sheets: ARRAYFORMULA)
       else if (x.k === 's') s += '<c r="' + ref + '"' + st + ' t="inlineStr"><is><t xml:space="preserve">' + esc(x.v) + '</t></is></c>';
       else if (x.k === 'n') s += '<c r="' + ref + '"' + st + '><v>' + x.v + '</v></c>';
       else s += '<c r="' + ref + '"' + st + '/>';
@@ -430,16 +438,25 @@ async function generate(opt) {
   const minNT = Math.min(...POG.map(L => NTS[LET.indexOf(L)]));
   const fitQ = n => Math.max(1, Math.min(Math.ceil(n / POG.length), minNT));
   const CUSPO = hasSch('po', PO);
+  // messaggio chiaro: squadre del playoff = qualificate per girone x gironi del playoff
+  const qErr = (w, n, q) => { const g = POG.length, gt = g === 1 ? '1 girone (' + POG[0] + ')' : g + ' gironi (' + POG.join(', ') + ')';
+    return w + ': ' + n + ' squadre da ' + gt + (n % g ? ' non si dividono in parti uguali: scegliere un numero di squadre multiplo di ' + g + ' oppure cambiare i gironi del playoff.' : ' vogliono ' + (n / g) + ' qualificate per girone, ma la casella "Qualificate per girone" dice ' + q + ': correggere una delle due (' + (n / g) + ' x ' + g + ' = ' + n + ').'); };
   const POQ = PO ? (CUSPO ? fitQ(PO) : C.poq ? +C.poq : PO / POG.length) : 0;
-  if (PO && !CUSPO && (POQ * POG.length !== PO || POQ < 1)) throw new Error('Playoff: qualificate per girone x numero di gironi deve dare ' + PO + ' (ora ' + POQ + ' x ' + POG.length + ').');
+  if (PO && !CUSPO && (POQ * POG.length !== PO || POQ < 1)) throw new Error(qErr('Playoff', PO, POQ));
   if (PO && !CUSPO) for (const L of POG) if (POQ > NTS[LET.indexOf(L)]) throw new Error('Playoff: il girone ' + L + ' ha meno di ' + POQ + ' squadre.');
-  const PAR = !!C.par && C.par !== '0' && C.par !== 'false';   // playoff con andata e ritorno (finali in gara unica)
+  // playoff: turni con andata e ritorno, indicati col numero di squadre del turno (64, 32, 16, 8 = quarti, 4 = semifinali);
+  // true = tutti i turni prima delle finali (le finali restano sempre in gara unica)
+  const PARSET = C.par === true || C.par === 'true' || C.par === '1' ? new Set([64, 32, 16, 8, 4])
+    : new Set(String(C.par || '').split(/[,;\s]+/).map(Number).filter(n => [64, 32, 16, 8, 4].includes(n)));
+  const PAR = PARSET.size > 0;
+  const PARNAME = { 64: 'trentaduesimi', 32: 'sedicesimi', 16: 'ottavi', 8: 'quarti', 4: 'semifinali' };
+  const PARTXT = [64, 32, 16, 8, 4].filter(n => PARSET.has(n)).map(n => PARNAME[n]).join(', ');
   const PP = C.pp === undefined || C.pp === '' ? 0 : +C.pp;
   if (!okN(PP)) throw new Error('Torneo Primavera: le squadre devono essere 0 oppure da 2 a 64.');
   if (PP && !PO) throw new Error('Il Torneo Primavera richiede il playoff principale.');
   const CUSPP = hasSch('po2', PP);
   const PPQ = PP ? (CUSPP ? Math.max(0, Math.min(Math.ceil(PP / POG.length), minNT - POQ)) : C.ppq ? +C.ppq : PP / POG.length) : 0;
-  if (PP && !CUSPP && (PPQ * POG.length !== PP || PPQ < 1)) throw new Error('Torneo Primavera: qualificate per girone x numero di gironi deve dare ' + PP + ' (ora ' + PPQ + ' x ' + POG.length + ').');
+  if (PP && !CUSPP && (PPQ * POG.length !== PP || PPQ < 1)) throw new Error(qErr('Torneo Primavera', PP, PPQ));
   if (PP && !CUSPP) for (const L of POG) if (POQ + PPQ > NTS[LET.indexOf(L)]) throw new Error('Torneo Primavera: il girone ' + L + ' ha meno di ' + (POQ + PPQ) + ' squadre.');
   const NARB = Math.max(0, parseInt(C.narb, 10) || 0), NUDC = Math.max(0, parseInt(C.nudc, 10) || 0);   // 0 o vuoto = foglio non creato
 
@@ -602,7 +619,7 @@ async function generate(opt) {
   }
   { const x = ws.cell(13, 6); x.s = TC[13][5][1]; setv(x, 'FC'); }
   // link alle istruzioni per l'uso del file, accanto ai parametri
-  { const x = ws.cell(1, 6); x.s = 51; setv(x, '=HYPERLINK("https://github.com/baskin-software/generatore-calendari-baskin-excel/blob/main/ISTRUZIONI.md","Istruzioni per l\'uso del file: cosa compilare e cosa non fare (clic per aprire)")'); ws.merge('F1:L1'); }
+  { const x = ws.cell(1, 6); x.s = 51; setv(x, '=HYPERLINK("https://github.com/baskin-software/generatore-calendari-baskin-excel/blob/master/ISTRUZIONI.md","Istruzioni per l\'uso del file: cosa compilare e cosa non fare (clic per aprire)")'); ws.merge('F1:L1'); }
   ws.merge('B12:W12'); ws.merge(slotcol(1) + '12:' + slotcol(NT) + '12'); for (let b = 0; b < 4; b++) ws.merge(bcol(b, 1) + '12:' + bcol(b, NT) + '12');
   const D = col => 'Dati!$' + col + '$2:$' + col + '$' + DATI_LAST;
   // scontri diretti per codice squadra: le colonne dei posti (slot) contengono i codici
@@ -671,7 +688,7 @@ async function generate(opt) {
         for (let q = 0; q < 3; q++) copyRow('Calendario A', 12 + q, cw, hdr + q, { L, over: q === 1 && ROB ? { 1: ++gnum } : (q === 1 && bi === 0 && t === 0) ? { 1: c.goff + 1 } : null });
         if (ROB) { const g = hdr + 1; (GNUM_ROW[c.name] = GNUM_ROW[c.name] || {})[g] = gnum;
           // colonne nascoste della gara: giornata (dalla barra GIORNATA piu' vicina sopra), fase e girone del blocco
-          cw.set(g, 30, '=IFERROR(LOOKUP(2,1/ISNUMBER(SEARCH("GIORNATA",$B$8:$B' + (g - 1) + ')),$A$8:$A' + (g - 1) + '),"")');
+          cw.set(g, 30, '=IFERROR(LOOKUP(2,1/ISNUMBER(SEARCH("GIORNATA",$B$8:$B' + (g - 1) + ')),$A$8:$A' + (g - 1) + '),"")'); cw.cell(g, 30).arr = true;   // matriciale: in Google Sheets diventa ARRAYFORMULA
           cw.set(g, 31, RND[k][b].fase); cw.set(g, 32, L); }
         { const g = hdr + 1, FC = x => 'COUNTIFS(Campionato!$B$' + T1 + ':$B$' + T2 + ',' + x + ',Campionato!$F$' + T1 + ':$F$' + T2 + ',"S")>0', ex = 'OR(' + FC('$C' + g) + ',' + FC('$E' + g) + ')';
           cw.set(g, 13, '=IF(OR($B' + g + '="",$D' + g + '="",' + ex + '),"(Squadra A)",$C' + g + ')'); cw.set(g, 20, '=IF(OR($B' + g + '="",$D' + g + '="",' + ex + '),"(Squadra B)",$E' + g + ')'); }   // Dati per codice squadra; le gare con una squadra fuori classifica non contano
@@ -730,20 +747,20 @@ async function generate(opt) {
     // andata e ritorno: ogni turno prima delle finali si gioca in due gare (al ritorno le squadre si scambiano il campo) e passa
     // chi ha la migliore differenza canestri nel totale; in caso di parita' si scrive A o B nella casella dell'esito. Le finali restano in gara unica.
     // Nei tabelloni importati con lo schema di origine le coppie andata/ritorno sono quelle trovate nel file.
-    const AR = !SCH && PAR;
+    const AR = !SCH && PAR, two2 = s => AR && !s.fin && PARSET.has(s.n);   // turno con andata e ritorno
     const TPAIR = new Map(); if (SCH && Array.isArray(SCH.ties)) for (const t of SCH.ties) TPAIR.set(t[1] | 0, t[0] | 0);   // ordine ritorno -> ordine andata
     B.TIES = []; B.LEG = []; B.ESITI = [];
     let cur = 8, ordc = 0;
     SECT.forEach((s, si) => {
       const bar = cur; B.PBAR.push(bar);
-      copyRow('Playoff', 8, pw, bar, { over: { 2: SCH ? (/PLAY.?OFF|PRIMAVERA/i.test(s.title) ? s.title : TOP + ' - ' + s.title) : TOP + ' A ' + P + ' - ' + s.title + (AR && !s.fin ? ' (ANDATA E RITORNO)' : '') } }); pw.merge('B' + bar + ':L' + bar);
+      copyRow('Playoff', 8, pw, bar, { over: { 2: SCH ? (/PLAY.?OFF|PRIMAVERA/i.test(s.title) ? s.title : TOP + ' - ' + s.title) : TOP + ' A ' + P + ' - ' + s.title + (two2(s) ? ' (ANDATA E RITORNO)' : '') } }); pw.merge('B' + bar + ':L' + bar);
       const lst = [], ties = [], legs = []; let y = bar + 1;
       if (SCH) for (let i = 0; i < s.ng; i++) {
         lst.push([y, y + 1, y + 2]); legs.push(''); y += 3; const o = ordc++;
         if (TPAIR.has(o)) { B.ESITI.push({ a: TPAIR.get(o), r: o, ex: y }); y += 1; }
       }
       else for (let i = 0; i < s.ng; i++) {
-        const bye = si === 0 && !s.fin && P2 - 1 - i >= P, two = AR && !s.fin && !bye, a = lst.length;
+        const bye = si === 0 && !s.fin && P2 - 1 - i >= P, two = two2(s) && !bye, a = lst.length;
         lst.push([y, y + 1, y + 2]); legs.push(two ? 'andata' : ''); y += 3;
         if (two) { lst.push([y, y + 1, y + 2]); legs.push('ritorno'); y += 3; ties.push({ a, r: a + 1, ex: y, ref: y, num: lst[a + 1][1] }); y += 1; }
         else ties.push({ a, r: a, ref: lst[a][1], num: lst[a][1] });
@@ -801,7 +818,7 @@ async function generate(opt) {
     const chi = (rank0 ? 'le classificate dalla ' + (rank0 + 1) + 'a alla ' + (rank0 + Q) + 'a' : 'le prime ' + Q + ' classificate') + ' ' + (POG.length > 1 ? 'dei gironi ' + POG.join(', ') : 'del girone ' + POG[0]);
     const notes = [TOP.charAt(0) + TOP.slice(1).toLowerCase() + ' a ' + P + ' squadre: ' + chi + '.',
       'Primo turno: ' + Array.from({ length: Math.max(1, P2 / 2) }, (_, i) => seeds[i] + '-' + (P2 - 1 - i >= P ? 'BYE' : seeds[P2 - 1 - i])).join(', ') + (P2 > P ? ' (BYE = passa il turno senza giocare)' : '') + ' (teste di serie: prima la posizione, poi la lettera del girone; la prima incontra l\'ultima, la seconda la penultima, e cosi\' via).',
-      'Turni successivi: vincente della gara 1 contro vincente dell\'ultima gara del turno, 2 contro penultima, e cosi\' via.' + (P2 >= 4 ? ' Finali: perdenti semifinali = finale 3o-4o posto; vincenti = finale 1o-2o posto.' : '') + (AR ? ' Andata e ritorno (finali in gara unica): al ritorno le squadre si scambiano il campo e passa chi ha la migliore differenza canestri nel totale; in caso di parita\' si scrive A o B nella casella a destra della riga dell\'esito.' : ''),
+      'Turni successivi: vincente della gara 1 contro vincente dell\'ultima gara del turno, 2 contro penultima, e cosi\' via.' + (P2 >= 4 ? ' Finali: perdenti semifinali = finale 3o-4o posto; vincenti = finale 1o-2o posto.' : '') + (SECT.some(two2) ? ' Andata e ritorno (' + SECT.filter(two2).map(x => x.lab.toLowerCase()).join(', ') + '; le altre gare in gara unica): al ritorno le squadre si scambiano il campo e passa chi ha la migliore differenza canestri nel totale; in caso di parita\' si scrive A o B nella casella a destra della riga dell\'esito.' : ''),
       'Sfondo verde: campo ancora da definire (codice TBD).'];
     if (SCH) notes.splice(0, 3, TOP.charAt(0) + TOP.slice(1).toLowerCase() + ' importato con lo schema del file di origine (' + SECT.map(x => x.title.toLowerCase() + ': ' + (x.ng === 1 ? '1 gara' : x.ng + ' gare')).join('; ') + ').',
       'Squadre scritte gara per gara nelle colonne C ed E (codice squadra, oppure girone e posizione come A3): i turni successivi non si ricavano da soli, salvo le gare collegate a vincente o perdente di una gara precedente.' + (B.ESITI.length ? ' Andata e ritorno: sotto ogni gara di ritorno il totale delle due gare e chi passa (migliore differenza canestri; in caso di parita\' scrivere A o B nella casella a destra).' : '') + (B.custom === 'vuota' ? ' Griglia vuota: squadre e risultati da scrivere a mano.' : ''));
@@ -1229,7 +1246,7 @@ async function generate(opt) {
     ['n', '* Calendario: ' + LET.map((L, k) => ORIG.includes(k) ? L + ' come nel file di origine (' + NRk[k] + ' giornate' + (RND[k].some(x => x.fase === 'Ritorno') ? ', andata e ritorno' : '') + ')' : L + ' girone all\'italiana ' + (AR ? 'di andata e ritorno, ' : 'di sola andata, ') + NRk[k] + ' giornate da ' + RND[k][0].ng + ' gare' + (NTS[k] % 2 ? ' (ogni giornata una squadra riposa)' : '')).join('; ') + '; ' + GTOT + ' gare in totale.'],
     ['n', PO ? '* Playoff a ' + PO + ' squadre: le prime ' + POQ + ' ' + (POG.length > 1 ? 'dei gironi ' + POG.join(', ') : 'del girone ' + POG[0]) + '; gare numerate dalla ' + (GTOT + 1) + ' alla ' + (GTOT + BR[0].ngames) + '.' : '* Nessun playoff.'],
     ...(PP ? [['n', '* Torneo Primavera a ' + PP + ' squadre: le classificate dalla ' + (POQ + 1) + 'a alla ' + (POQ + PPQ) + 'a ' + (POG.length > 1 ? 'dei gironi ' + POG.join(', ') : 'del girone ' + POG[0]) + '; gare numerate dalla ' + BR[1].first + ' alla ' + (BR[1].first + BR[1].ngames - 1) + '. In classifica finale occupa le posizioni dalla ' + (PO + 1) + 'a alla ' + (PO + PP) + 'a.']] : []),
-    ...(PAR && PO ? [['n', '* Playoff con andata e ritorno (finali in gara unica): al ritorno le squadre si scambiano il campo; passa chi ha la migliore differenza canestri nel totale delle due gare, indicata nella riga dell\'esito; in caso di parita\' si scrive A o B nella casella a destra.']] : []),
+    ...(PAR && PO ? [['n', '* Playoff con andata e ritorno nei turni: ' + PARTXT + ' (le altre gare, finali comprese, in gara unica): al ritorno le squadre si scambiano il campo; passa chi ha la migliore differenza canestri nel totale delle due gare, indicata nella riga dell\'esito; in caso di parita\' si scrive A o B nella casella a destra.']] : []),
     ['n', '* Classifica secondo i criteri Baskin: punti, poi vittorie negli scontri diretti, quoziente canestri negli scontri diretti, quoziente canestri totale, ordine alfabetico.'],
     ['n', '* Squadre fuori classifica: S in colonna F (FC) del foglio Campionato. I loro risultati restano nei calendari ma la gara non conta per nessuna delle due squadre (ne\' vittoria ne\' sconfitta, ne\' punti per i quozienti); in classifica sono in fondo al girone, in ordine alfabetico, evidenziate in giallo, con (f.c.) e tutti i valori a "-". Nel RIEPILOGO la colonna FC indica A, B o AB.'],
     ['n', '* Il girone di una squadra dipende SOLO dalla sigla in colonna E del foglio Campionato. I risultati sono collegati al CODICE squadra (colonna B), che deve essere unico: il nome si puo\' cambiare in qualsiasi momento e puo\' ripetersi in gironi diversi. Anche i codici dei campi devono essere unici. Il foglio nascosto Dati consolida le righe di servizio dei calendari.'],
@@ -1527,6 +1544,12 @@ function extract(M, opts) {
     const ix = str(get(camp, r, 9)), kg = get(camp, r, 11);
     teams.push({ code, name, pen, gir, fc: /^(X|S|SI|SÌ)$/.test(str(get(camp, r, 6)).toUpperCase()), z: ix.startsWith('|') && kg === 0, row: r });
   }
+  // righe segnaposto nell'elenco squadre e dei campi ("RINVIATA A DATA DA DESTINARSI", "LUOGO DA DEFINIRE"...): non sono squadre ne' campi.
+  // Squadra segnaposto in una gara di calendario: lato lasciato vuoto e testo nel foglio Note (se e' usata nei fogli di playoff resta squadra).
+  const PH_RE = /RINVIAT|DA DESTINARSI|DA DEFINIRE/i, phTxt = n => { n = String(n).trim(); return n.charAt(0).toUpperCase() + n.slice(1).toLowerCase(); };
+  const phantom = [], phTeam = {};
+  { const usedC = new Set(), usedP = new Set(); for (const n of M.order) if (/^(Calendario|Playoff|Coppa)/.test(n) || /Primavera/.test(n)) { const sh = S[n], cal = /^Calendario/.test(n); if (sh) for (const r of sh.cells.keys()) for (const c of [3, 5]) (cal ? usedC : usedP).add(str(get(sh, r, c))); }
+    for (let i = teams.length - 1; i >= 0; i--) if (PH_RE.test(teams[i].name) && !usedP.has(teams[i].code)) { const t = teams.splice(i, 1)[0]; if (usedC.has(t.code)) phTeam[t.code] = t.name; else phantom.unshift(t.name); } }
   const letters = []; for (const t of teams) if (!letters.includes(t.gir)) letters.push(t.gir);
   // se un girone ha squadre con nome, le righe senza nome sono solo posti liberi
   for (const L of letters) { const named = teams.filter(t => t.gir === L && t.name); if (named.length) for (let i = teams.length - 1; i >= 0; i--) if (teams[i].gir === L && !teams[i].name) teams.splice(i, 1); }
@@ -1554,15 +1577,22 @@ function extract(M, opts) {
   if (fh) for (let r = fh + 1; r <= fh + 3000; r++) { const code = str(get(camp, r, 2)); if (!code) break; const name = str(get(camp, r, 3)), link = str(get(camp, r, 4)); if (name || link) fields.push({ code, name, link }); }
   const venueMap = {}; let freePO = 1; const usedPO = new Set(fields.filter(f => /^PO\d+$/.test(f.code)).map(f => f.code));
   const extraFields = [];
-  for (const f of fields) {
+  // troppi campi non legati a una squadra per gli 8 campi neutri: prima quelli usati nelle gare (nell'ordine del file), poi gli altri
+  let fOrder = fields;
+  { const free = 8 - usedPO.size, extra = fields.filter(f => !codeMap[f.code] && !/^PO\d+$/.test(f.code) && f.code !== 'TBD' && !PH_RE.test(f.name));
+    if (extra.length > free) { const usedV = new Set(); for (const n of M.order) if (/^(Calendario|Playoff|Coppa)/.test(n) || /Primavera/.test(n)) { const sh = S[n]; if (sh) for (const r of sh.cells.keys()) usedV.add(str(get(sh, r, 9))); }
+      fOrder = fields.filter(f => !extra.includes(f) || usedV.has(f.code)).concat(extra.filter(f => !usedV.has(f.code))); } }
+  const phField = {};
+  for (const f of fOrder) {
     if (codeMap[f.code]) venueMap[f.code] = codeMap[f.code];
+    else if (PH_RE.test(f.name) && f.code !== 'TBD' && !/^PO\d+$/.test(f.code)) { venueMap[f.code] = 'TBD'; phField[f.code] = f.name; }
     else if (/^PO\d+$/.test(f.code) || f.code === 'TBD') venueMap[f.code] = f.code;
     else { while (usedPO.has('PO' + freePO)) freePO++; if (freePO <= 8) { venueMap[f.code] = 'PO' + freePO; usedPO.add('PO' + freePO); extraFields.push(f.code + ' -> PO' + freePO); } else extraFields.push(f.code + ' (nessun posto libero)'); }
   }
   const vmap = c => { c = str(c); if (!c) return ''; return venueMap[c] || codeMap[c] || c; };
   // gare (blocchi "Gara N." + riga con "-" in colonna K)
   const PO_RT = /(FINAL|QUART|OTTAV|SEDICES|TRENTADUES|SEMIFIN|PLAY.?OFF|PRIMAVERA)/i;
-  function games(sh, relax) {   // relax: fogli di playoff, gara riconosciuta anche senza il "-" in K
+  function games(sh, relax) {   // gara riconosciuta dal "-" in K oppure, se K e' vuota (trattino cancellato), da entrambe le squadre (C ed E) compilate; relax: fogli di playoff, basta una squadra o un risultato
     const out = []; let bar = '', rk = '', fase = 'Andata', rt = '', pof = false, lastG = -9;
     const rows = [...sh.cells.keys()].sort((a, b) => a - b);
     for (const r of rows) {
@@ -1572,7 +1602,7 @@ function extract(M, opts) {
       if (typeof a === 'string' && /^\d+[A-Z]{1,3}$/i.test(a.trim())) bar = a.trim().replace(/^\d+/, '').toUpperCase();
       { const bt = str(get(sh, r, 2));   // barra di sezione del playoff (QUARTI DI FINALE, FINALE 3°-4° POSTO...)
         if (r !== lastG + 1 && str(a) !== 'Gara N.' && bt && PO_RT.test(bt) && (str(get(sh, r + 1, 1)) === 'Gara N.' || str(get(sh, r + 2, 1)) === 'Gara N.')) { rt = bt; pof = true; } }
-      if (str(get(sh, r - 1, 1)) === 'Gara N.' && (get(sh, r, 11) === '-' || (relax && (str(get(sh, r, 3)) || str(get(sh, r, 5)) || typeof get(sh, r, 10) === 'number' || typeof get(sh, r, 12) === 'number') && !PO_RT.test(str(get(sh, r, 2)))))) {
+      if (str(get(sh, r - 1, 1)) === 'Gara N.' && (get(sh, r, 11) === '-' || (str(get(sh, r, 3)) && str(get(sh, r, 5)) && !str(get(sh, r, 11)) && str(get(sh, r, 12)) !== '-' && !PO_RT.test(str(get(sh, r, 2)))) || (relax && (str(get(sh, r, 3)) || str(get(sh, r, 5)) || typeof get(sh, r, 10) === 'number' || typeof get(sh, r, 12) === 'number') && !PO_RT.test(str(get(sh, r, 2)))))) {
         lastG = r;
         out.push({ row: r, num: get(sh, r, 1), a: get(sh, r, 3), b: get(sh, r, 5), d: typeof get(sh, r, 6) === 'number' ? get(sh, r, 6) : typeof get(sh, r, 7) === 'number' ? Math.floor(get(sh, r, 7)) + (typeof get(sh, r, 8) === 'number' ? get(sh, r, 8) % 1 : 0) : (str(get(sh, r, 7)) || undefined), c: get(sh, r + 1, 9), ra: get(sh, r, 10), rb: get(sh, r, 12), bar, rk, fase, vtxt: str(get(sh, r + 1, 2)), nameA: str(get(sh, r, 2)), nameB: str(get(sh, r, 4)), fa: sh.fx ? sh.fx.get(r * 1000 + 2) : undefined, fb: sh.fx ? sh.fx.get(r * 1000 + 4) : undefined, rt, po: pof });
       }
@@ -1601,7 +1631,7 @@ function extract(M, opts) {
     if (!L) { calRef.push(null); continue; }
     const k = letters.indexOf(L); const i = ++nGir[L];
     const rkey = g.sheet + '|' + g.rk, RM = RK[L] = RK[L] || new Map(); if (!RM.has(rkey)) RM.set(rkey, RM.size + 1);
-    const o = { t: 'gara', g: NEWL[k], i, r: RM.get(rkey), f: g.fase, nota: (!str(g.c) && g.vtxt) ? g.vtxt : undefined, a: codeMap[str(g.a)] || '', b: codeMap[str(g.b)] || '', d: minutes(g.d), c: vmap(g.c), ra: g.ra === undefined ? '' : g.ra, rb: g.rb === undefined ? '' : g.rb };
+    const o = { t: 'gara', g: NEWL[k], i, r: RM.get(rkey), f: g.fase, nota: [(!str(g.c) && g.vtxt) ? g.vtxt : '', ...[g.a, g.b].map(x => phTeam[str(x)] ? phTxt(phTeam[str(x)]) : ''), phField[str(g.c)] ? phTxt(phField[str(g.c)]) : ''].filter((x, j, A) => x && A.indexOf(x) === j).join('. ') || undefined, ph: !!(phTeam[str(g.a)] || phTeam[str(g.b)] || phField[str(g.c)]), a: codeMap[str(g.a)] || '', b: codeMap[str(g.b)] || '', d: minutes(g.d), c: vmap(g.c), ra: g.ra === undefined ? '' : g.ra, rb: g.rb === undefined ? '' : g.rb };
     righe.push(o); calRef.push(o);
     (uniS[g.sheet] = uniS[g.sheet] || new Set()).add(NEWL[k]);
   }
@@ -1775,7 +1805,7 @@ function extract(M, opts) {
   // fogli Note e Provvedimenti Disciplinari: numero di gara + testo, legati alla gara (seguono la nuova numerazione)
   const xn = { nota: [0, 0], prov: [0, 0] };
   // note scritte nella riga del campo (senza codice campo): vanno nel foglio Note
-  const vNotes = righe.filter(o => o.t === 'gara' && o.nota).length;
+  const vNotes = righe.filter(o => o.t === 'gara' && o.nota && !o.ph).length, phNotes = righe.filter(o => o.t === 'gara' && o.ph).length;
   for (const [nm, key] of [['Note', 'nota'], ['Provvedimenti Disciplinari', 'prov']]) {
     const sh = S[nm] || (key === 'prov' ? opts.provSheet : null); if (!sh) continue; xn[key].sheet = true;   // provvedimenti anche da una cartella di lavoro a parte
     for (let r = 2; r <= sh.maxRow; r++) { const num = get(sh, r, 1), txt = str(get(sh, r, 2)); if (!txt) continue; const tgt = typeof num === 'number' ? byNum.get(num) : null; if (tgt) { tgt[key] = tgt[key] ? tgt[key] + ' ' + txt : txt; xn[key][0]++; } else xn[key][1]++; }
@@ -1807,7 +1837,7 @@ function extract(M, opts) {
   const played = new Set(); for (const g of cal) if (typeof g.ra === 'number' && typeof g.rb === 'number' && g.ra + g.rb > 0) { played.add(str(g.a)); played.add(str(g.b)); }
   const fcList = [];
   for (const t of teams) { if (!t.fc && t.z && played.has(t.code)) t.fc = true; if (t.fc) fcList.push(t.name); }
-  for (const t of teams) righe.push({ t: 'sq', k: codeMap[t.code], n: t.name, p: t.pen === undefined ? '' : t.pen, fc: t.fc });
+  for (const t of teams) righe.push({ t: 'sq', k: codeMap[t.code], c: t.code, n: t.name, p: t.pen === undefined ? '' : t.pen, fc: t.fc });
   for (const f of fields) if (venueMap[f.code]) righe.push({ t: 'campo', k: venueMap[f.code], n: f.name, l: f.link });
   const gironi = letters.map((L, k) => ({ name: names[k], nt: Math.max(3, byGir[L].length), color: colors[k], sigla: NEWL[k] }));
   // ---- avvisi: cose da correggere a mano nel file di origine prima di procedere ----
@@ -1862,6 +1892,8 @@ function extract(M, opts) {
     'Designazioni lette: ' + desN + (desSkip ? ' (' + desSkip + ' senza gara corrispondente)' : '') + '; arbitri: ' + narb + '; ufficiali di campo: ' + nudc + '.'
   ];
   if (forfNote) report.push(forfNote);
+  if (phantom.length) report.push('Righe segnaposto dell\'elenco squadre non usate in nessuna gara, non importate come squadre: ' + phantom.map(n => '"' + n + '"').join(', ') + '.');
+  if (phNotes) report.push(phNotes + (phNotes === 1 ? ' gara' : ' gare') + ' con un segnaposto al posto della squadra o del campo (' + [...new Set([...Object.values(phTeam), ...Object.values(phField)].map(x => '"' + x + '"'))].join(', ') + '): le squadre segnaposto restano vuote, i campi segnaposto diventano TBD (da definire) e il testo va nel foglio Note.');
   if (vNotes) report.push(vNotes + ' note scritte nella riga del campo (senza codice campo) portate nel foglio Note.');
   if (B1 && B1.bye) report.push('Playoff a ' + B1.size + ' squadre con ' + B1.bye + ' BYE: le teste di serie migliori passano il primo turno senza giocare; risultati del tabellone collegati alle gare del nuovo modello' + (B1.miss ? ' (' + B1.miss + ' gare non collegate, da reinserire)' : '') + '.');
   if (calPO.length) report.push(nG(calPO.length) + ' di playoff scritte nel foglio del calendario: non contate come gare di girone' + (B1 && mainP && mainP.cal ? ', usate per il tabellone del playoff' : '') + '.');
@@ -1921,12 +1953,53 @@ function extract(M, opts) {
     }
     params[3] = gironi.map(g => g.sigla).join(','); params[9] = gironi.map(g => g.name).join(',');
   }
-  return { tipo, gironi, params, po, pp, narb, nudc, warn, ucl, note: !!xn.nota.sheet || vNotes > 0, prov: !!xn.prov.sheet || !!S['Collegamento Provvedimenti'], provx: !!S['Collegamento Provvedimenti'] || !!opts.provSheet, uni: uni.join('\n'), data: { origine: tipo, righe }, report };
+  return { tipo, gironi, params, po, pp, narb, nudc, warn, ucl, note: !!xn.nota.sheet || vNotes > 0 || phNotes > 0, prov: !!xn.prov.sheet || !!S['Collegamento Provvedimenti'], provx: !!S['Collegamento Provvedimenti'] || !!opts.provSheet, uni: uni.join('\n'), data: { origine: tipo, righe }, report };
 }
 
 // ---------------- fusione di piu' file ----------------
 // ogni file porta i suoi gironi in coda; codici squadra e campo rinumerati, campi neutri uniti per nome,
 // arbitri e UdC uniti per nome; i playoff dei singoli file non si importano
+// ---------------- rifinitura dopo l'importazione (un file o piu' file uniti) ----------------
+// 1) codici squadra e campo del file di origine mantenuti; se un codice si ripete (tra gironi o tra file) il secondo
+//    prende il codice di posto del nuovo modello (es. B02 = seconda squadra del girone B);
+// 2) squadre con lo stesso nome in gironi diversi: "Nome (A)", "Nome (B)";
+// 3) campi con lo stesso nome e lo stesso link alla mappa: una riga sola, le gare puntano al primo.
+function finalize(X) {
+  const R = X.data.righe, sq = R.filter(o => o.t === 'sq'), pre = c => String(c || '').replace(/\d+$/, '');
+  const used = new Set(), ren = [];
+  const take = c => { used.add(String(c).toUpperCase()); return c; };
+  for (const o of R) if (o.t === 'campo' && (/^PO\d+$/.test(o.k) || o.k === 'TBD')) used.add(o.k);
+  for (const o of sq) {
+    let c = String(o.c == null ? '' : o.c).trim();
+    if (!c || used.has(c.toUpperCase())) {
+      const old = c; c = o.k;
+      if (used.has(c.toUpperCase())) { const m = /^([A-Z]{1,3})(\d+)$/.exec(o.k); let n = m ? +m[2] : 0; do { n++; c = (m ? m[1] : pre(o.k)) + String(n).padStart(2, '0'); } while (used.has(c.toUpperCase())); }
+      if (old) ren.push(old + ' -> ' + c + ' (' + o.n + ')');
+    }
+    o.c = take(c);
+  }
+  const codeOf = {}; for (const o of sq) codeOf[o.k] = o.c;
+  for (const o of R) if (o.t === 'campo') o.c = codeOf[o.k] || o.k;
+  // omonimie tra gironi
+  const gOf = {}; for (const o of sq) { const k = String(o.n || '').trim().toLowerCase(); if (!k) continue; (gOf[k] = gOf[k] || new Set()).add(pre(o.k)); }
+  const omon = [];
+  for (const o of sq) { const k = String(o.n || '').trim().toLowerCase(); if (k && gOf[k].size > 1) { const sfx = ' (' + pre(o.k) + ')', n = String(o.n).trim(), d = n.indexOf('-');
+      // "Nome-Citta' PR": il girone va prima del trattino, cosi' compare anche nei calendari (che mostrano solo il nome)
+      if (!n.includes(sfx)) o.n = d > 0 ? n.slice(0, d).trim() + sfx + '-' + n.slice(d + 1) : n + sfx; omon.push(o.n); } }
+  // campi uguali raggruppati
+  const firstOf = new Map(), vmap = {}; let grp = 0;
+  for (let i = 0; i < R.length; i++) { const o = R[i]; if (o.t !== 'campo' || o.k === 'TBD') continue;
+    const key = String(o.n || '').trim().toLowerCase() + '|' + String(o.l || '').trim().toLowerCase(); if (!String(o.n || '').trim()) continue;
+    if (!firstOf.has(key)) { firstOf.set(key, o.k); continue; }
+    vmap[o.k] = firstOf.get(key); R.splice(i--, 1); grp++; }
+  if (grp) for (const o of R) if ((o.t === 'gara' || /^po/.test(o.t)) && o.c && vmap[o.c]) o.c = vmap[o.c];
+  X.report = X.report || [];
+  X.report.push('Codici di squadre e campi mantenuti dal file di origine' + (ren.length ? '; ' + ren.length + ' codici ripetuti rinominati col codice di posto del girone (es. ' + ren.slice(0, 4).join('; ') + ')' : '') + '.');
+  if (omon.length) X.report.push('Squadre con lo stesso nome in gironi diversi, distinte col girone tra parentesi: ' + omon.length + (omon.length > 6 ? ' (es. ' + omon.slice(0, 6).join(', ') + ')' : ' (' + omon.join(', ') + ')') + '.');
+  if (grp) X.report.push((grp === 1 ? '1 campo uguale a un altro (stesso nome e stesso link) raggruppato' : grp + ' campi uguali ad altri (stesso nome e stesso link) raggruppati') + ': le gare puntano al primo.');
+  return X;
+}
+
 function merge(list) {
   if (list.length === 1) return list[0];
   const gironi = [], righe = [], report = [], uni = [], warn = [];
@@ -1934,6 +2007,11 @@ function merge(list) {
   const arb = new Map(), udc = new Map();
   const seen = new Map();
   let off = 0, params = null; const usedS = new Set();
+  // piu' di 8 campi neutri in totale: i campi uguali (nome e mappa) a quello di una squadra vanno su quel campo e i posti PO
+  // vanno prima ai campi usati nelle gare; si decide alla fine (TOK = segnaposto provvisorio nelle gare)
+  const nkey = o => (o.n || '').trim().toLowerCase() + '|' + (o.l || '').trim();
+  const PRIO = new Set(list.flatMap(X => X.data.righe.filter(o => o.t === 'campo' && /^PO\d+$/.test(o.k)).map(nkey))).size > 8;
+  const TOK = '\u0001', NEU = new Map();
   list.forEach((X, j) => {
     const n = X.gironi.length;
     if (off + n > 26) throw new Error('Fusione: piu\' di 26 gironi in totale.');
@@ -1944,6 +2022,7 @@ function merge(list) {
     const poMap = {};
     for (const o of X.data.righe) if (o.t === 'campo' && (/^PO\d+$/.test(o.k) || o.k === 'TBD')) {
       if (o.k === 'TBD') { poMap.TBD = 'TBD'; if (!righe.some(x => x.t === 'campo' && x.k === 'TBD')) righe.push(Object.assign({}, o)); continue; }
+      if (PRIO) { const key = nkey(o); if (!NEU.has(key)) NEU.set(key, { o, used: false }); if (X.data.righe.some(g => g.t === 'gara' && String(g.c == null ? '' : g.c).trim() === o.k)) NEU.get(key).used = true; poMap[o.k] = TOK + key; continue; }
       const key = (o.n || '').trim().toLowerCase() + '|' + (o.l || '').trim();
       if (!POn[key]) { if (poFree > 8) { warn.push('campo neutro "' + o.n + '" senza posto libero (massimo 8)'); continue; } POn[key] = 'PO' + poFree++; righe.push(Object.assign({}, o, { k: POn[key] })); }
       poMap[o.k] = POn[key];
@@ -1959,9 +2038,19 @@ function merge(list) {
     if (X.uni) for (const line of X.uni.split('\n')) if (line) uni.push(line.split(',').map(L => smap[L] || L).join(','));
     if (!params) params = X.params.slice();
     report.push('File ' + (j + 1) + ' (' + X.file + '): ' + X.tipo + ', ' + n + ' giron' + (n > 1 ? 'i' : 'e') + ' -> ' + newS.join(', ') + ', ' + X.data.righe.filter(o => o.t === 'sq').length + ' squadre, ' + X.data.righe.filter(o => o.t === 'gara').length + ' gare' + (X.po && X.po.squadre ? ' (playoff del file non importato)' : '') + '.');
-    for (const l of X.report) if (/^(Punteggio forfait|Campi non legati)/.test(l)) report.push('File ' + (j + 1) + ': ' + l);
+    for (const l of X.report) if (/^(Punteggio forfait|Campi non legati|Righe segnaposto|\d+ gar[ae] con un segnaposto)/.test(l)) report.push('File ' + (j + 1) + ': ' + l);
     off += n;
   });
+  if (PRIO) {
+    const teamF = new Map(); for (const o of righe) if (o.t === 'campo' && !/^PO\d+$/.test(o.k) && o.k !== 'TBD' && (o.n || o.l) && !teamF.has(nkey(o))) teamF.set(nkey(o), o.k);
+    const tgt = new Map(), same = [], cand = [...NEU].filter(([k]) => !teamF.has(k));
+    for (const [k] of NEU) if (teamF.has(k)) { tgt.set(k, teamF.get(k)); same.push('"' + NEU.get(k).o.n + '" -> ' + teamF.get(k)); }
+    for (const [k, v] of cand.filter(([, v]) => v.used).concat(cand.filter(([, v]) => !v.used))) {
+      if (poFree > 8) { warn.push('campo neutro "' + v.o.n + '" ' + (v.used ? 'senza posto libero (massimo 8): le sue gare restano senza campo' : 'non usato in nessuna gara e senza posto libero: tralasciato')); continue; }
+      tgt.set(k, 'PO' + poFree); righe.push(Object.assign({}, v.o, { k: 'PO' + poFree++ })); }
+    for (const o of righe) if (o.t === 'gara' && String(o.c || '').startsWith(TOK)) o.c = tgt.get(o.c.slice(1)) || '';
+    if (same.length) report.push('Campi neutri uguali al campo di una squadra (stesso nome e mappa), uniti a quello: ' + same.join(', ') + '.');
+  }
   let i = 0; for (const o of arb.values()) righe.push(Object.assign({}, o, { i: ++i }));
   let u = 0; for (const o of udc.values()) righe.push(Object.assign({}, o, { i: ++u }));
   const LET = gironi.map(g => g.sigla);
@@ -1992,7 +2081,7 @@ function remap(righe, map, tm, fm, all) {
   return out;
 }
 
-return { read, extract, merge, remap, remapCode };
+return { read, extract, merge, finalize, remap, remapCode };
 })();
 if (typeof module !== 'undefined') module.exports = XL;
 
@@ -2002,7 +2091,7 @@ const $ = id => document.getElementById(id);
 // ---------- valori iniziali (anche dopo Reset; il browser non deve riproporre valori vecchi) ----------
 const DEF = { gironi: 'Gold, 10, gold', cfg: ['Campionato Baskin', '', '', 'A', '2026/2027', '3', '1', '0', '40-0', 'Gold'].join('\n'), uni: '', po: '8', poq: '8', pog: '', pp: '0', ppq: '', narb: '', nudc: '', teams: '', fields: '', fc: '' };
 let UCL_AUTO = '';
-function setDefaults() { for (const k in DEF) $(k).value = DEF[k]; $('note').checked = false; $('prov').checked = false; $('orig').checked = true; $('ar').checked = false; $('par').checked = false; $('pos').checked = false; $('provx').checked = false; $('ucl').value = UCL_AUTO = allG(); $('warn').textContent = ''; }
+function setDefaults() { for (const k in DEF) $(k).value = DEF[k]; $('note').checked = false; $('prov').checked = false; $('orig').checked = true; $('ar').checked = false; document.querySelectorAll('.par').forEach(x => x.checked = false); $('pos').checked = false; $('provx').checked = false; $('ucl').value = UCL_AUTO = allG(); $('warn').textContent = ''; }
 setDefaults();
 function preview() {
   const { gironi, err } = GEN.parseGironi($('gironi').value); const S = GEN.sigle(gironi); let h = '';
@@ -2111,6 +2200,14 @@ function onTeams() {   // codice squadra cambiato: il campo di casa lo segue (sc
   FSNAP = matchSnap(FSNAP, GEN.parseFields($('fields').value).rows, fkey, FREG);
 }
 // classifiche raggruppate: finche' il campo contiene tutti i gironi (il default) segue i gironi aggiunti o tolti
+// qualificate per girone: si aggiornano da sole quando cambiano le squadre del playoff o i gironi qualificati
+function playoffGir() { let S = []; try { S = GEN.sigle(GEN.parseGironi($('gironi').value).gironi); } catch (e) {}
+  const t = $('pog').value.trim().toUpperCase(); if (!t) return Math.max(1, S.length); let n = 0;
+  for (const x of t.split(/[,;\s]+/).filter(Boolean)) { const m = /^([A-Z]{1,3})-([A-Z]{1,3})$/.exec(x); n += m && S.includes(m[1]) && S.includes(m[2]) ? S.indexOf(m[2]) - S.indexOf(m[1]) + 1 : 1; }
+  return Math.max(1, n); }
+function syncQ() { const g = playoffGir(); for (const [a, b] of [['po', 'poq'], ['pp', 'ppq']]) { const n = +$(a).value; if (n > 0 && n % g === 0) $(b).value = n / g; } }
+['po', 'pp', 'pog'].forEach(id => $(id).addEventListener('input', syncQ));
+$('gironi').addEventListener('change', syncQ);
 function allG() { try { const S = GEN.sigle(GEN.parseGironi($('gironi').value).gironi); return S.length > 2 ? S[0] + '-' + S[S.length - 1] : S.join(','); } catch (e) { return ''; } }
 function gironiSync() { const was = $('ucl').value.trim() === UCL_AUTO; const ch = syncBoxes(); const a = allG(); if (was) $('ucl').value = a; UCL_AUTO = a; return ch; }
 $('gironi').addEventListener('change', () => { if (gironiSync()) snapAll(); });
@@ -2146,7 +2243,7 @@ async function importa() {
     }
     if (errs.length) throw new Error(errs.length > 1 ? errs.length + ' file non importabili (da correggere prima di procedere):\n- ' + errs.join('\n- ') : errs[0]);
     if (!list.length) throw new Error((vuoti.length > 1 ? 'I file scelti non contengono squadre (sono modelli vuoti)' : 'Il file "' + vuoti[0] + '" non contiene squadre (e\' un modello vuoto)') + ': non c\'e\' niente da importare.');
-    const X = XL.merge(list);
+    const X = XL.finalize(XL.merge(list));   // codici del file di origine, omonimie tra gironi, campi uguali raggruppati
     if (vuoti.length) X.report = ['File ignorati perche\' non contengono squadre (modelli vuoti): ' + vuoti.join(', ') + '.', ...X.report];
     $('gironi').value = X.gironi.map((g, i) => g.name + ', ' + g.nt + ', ' + (g.color || GEN.DEFAULT_COLORS[i % GEN.DEFAULT_COLORS.length]) + ', ' + g.sigla).join('\n');
     UCL_AUTO = allG(); $('ucl').value = X.ucl != null ? X.ucl : UCL_AUTO;
@@ -2157,16 +2254,16 @@ async function importa() {
     $('pp').value = String((X.pp && X.pp.squadre) || 0); $('ppq').value = (X.pp && X.pp.qualificate) || '';
     const tsv = a => a.map(x => (x === undefined || x === null ? '' : String(x)).replace(/[\t\r\n]+/g, ' ')).join('\t');
     const sq = X.data.righe.filter(o => o.t === 'sq'), cp = X.data.righe.filter(o => o.t === 'campo');
-    $('teams').value = sq.map(o => tsv([o.k, o.n, o.p, (PFX(o.k) || [])[1] || ''])).join('\n');
-    $('fc').value = sq.filter(o => o.fc).map(o => tsv([o.k, o.n])).join('\n');
-    $('fields').value = cp.map(o => tsv([o.k, o.n, o.l])).join('\n');
+    $('teams').value = sq.map(o => tsv([o.c || o.k, o.n, o.p, (PFX(o.k) || [])[1] || ''])).join('\n');
+    $('fc').value = sq.filter(o => o.fc).map(o => tsv([o.c || o.k, o.n])).join('\n');
+    $('fields').value = cp.map(o => tsv([o.c || o.k, o.n, o.l])).join('\n');
     IMPORTED = { righe: X.data.righe.filter(o => o.t !== 'sq' && o.t !== 'campo'), origine: list.length > 1 ? X.data.origine : X.tipo + ' (' + list[0].file + ')', origins: new Set(X.gironi.map(g => g.sigla)) };
     GSNAP = X.gironi.map(g => ({ name: g.name.trim().toLowerCase(), sigla: g.sigla, origin: g.sigla })); X.gironi.forEach(g => CURMAP[g.sigla] = g.sigla);
     GREG = X.gironi.map(g => ({ origin: g.sigla, names: new Set([g.name.trim().toLowerCase()]), sigle: new Set([g.sigla]) }));
     IMPT = sq.map(o => o.k); IMPF = cp.map(o => o.k);
     sq.forEach(o => { const k = tkey({ name: o.n }); if (k && !TREG.has(k)) TREG.set(k, o.k); });
     cp.forEach(o => { const k = fkey({ name: o.n, link: o.l }); if (k !== '|' && !FREG.has(k)) FREG.set(k, o.k); });
-    TSNAP = sq.map(o => ({ code: o.k, k: tkey({ name: o.n }), g: (PFX(o.k) || [])[1] || '', id: o.k })); FSNAP = cp.map(o => ({ code: o.k, k: fkey({ name: o.n, link: o.l }), id: o.k }));
+    TSNAP = sq.map(o => ({ code: o.c || o.k, k: tkey({ name: o.n }), g: (PFX(o.k) || [])[1] || '', id: o.k })); FSNAP = cp.map(o => ({ code: o.c || o.k, k: fkey({ name: o.n, link: o.l }), id: o.k }));
     rep.textContent = X.report.join('\n'); rep.className = 'ok';
     $('warn').textContent = (X.warn && X.warn.length) ? 'Da correggere a mano nel file di origine prima di procedere:\n- ' + X.warn.join('\n- ') : '';
     preview();
@@ -2194,7 +2291,7 @@ $('go').addEventListener('click', async () => {
     if (typeof CompressionStream === 'undefined') throw new Error('Il browser non supporta CompressionStream: usare una versione recente di Chrome, Edge, Firefox o Safari.');
     const { gironi, err } = GEN.parseGironi($('gironi').value); if (err.length) throw new Error(err.join(' '));
     if (gironiSync()) snapAll(); else onTeams();
-    const cfg = { po: $('po').value, poq: $('poq').value, pog: $('pog').value.trim(), pp: $('pp').value, ppq: $('ppq').value, narb: $('narb').value.trim(), nudc: $('nudc').value.trim(), uni: $('uni').value.trim(), ucl: $('ucl').value.trim(), note: $('note').checked, prov: $('prov').checked, provx: $('prov').checked && $('provx').checked, orig: $('orig').checked, ar: $('ar').checked, par: $('par').checked, pos: $('pos').checked };
+    const cfg = { po: $('po').value, poq: $('poq').value, pog: $('pog').value.trim(), pp: $('pp').value, ppq: $('ppq').value, narb: $('narb').value.trim(), nudc: $('nudc').value.trim(), uni: $('uni').value.trim(), ucl: $('ucl').value.trim(), note: $('note').checked, prov: $('prov').checked, provx: $('prov').checked && $('provx').checked, orig: $('orig').checked, ar: $('ar').checked, par: [...document.querySelectorAll('.par:checked')].map(x => x.value).join(','), pos: $('pos').checked };
     const T = GEN.parseTeams($('teams').value), F = GEN.parseFields($('fields').value);
     [...T.err, ...F.err, ...GEN.applyFC($('fc').value, T.rows)].forEach(w => say('Attenzione: ' + w, 'err'));
     const BX = GEN.boxRecords(T.rows, F.rows, gironi); BX.warn.forEach(w => say('Attenzione: ' + w, 'err'));
