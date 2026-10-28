@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Generatore_Campionato_Baskin.html by Daniele Lolli (UncleDan) feat. Claude AI - Release 1.34 - 2026-10-25 15-46-49 -->
+<!-- Generatore_Campionato_Baskin.html by Daniele Lolli (UncleDan) feat. Claude AI - Release 1.36 - 2026-10-28 14-46-39 -->
 <html lang="it">
 <head>
 <meta charset="utf-8">
@@ -193,7 +193,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 28px}
 </ul>
 </div>
 </section>
-<p class="rev">Generatore Campionato Baskin · Release 1.34 del 2026-10-25 15-46-49 · © 2026 Daniele Lolli (UncleDan) feat. Claude AI · <a href="https://github.com/baskin-software/generatore-calendari-baskin-excel" target="_blank" rel="noopener">GitHub</a> · licenza MIT (codice) e CC BY 4.0 (modelli)</p>
+<p class="rev">Generatore Campionato Baskin · Release 1.36 del 2026-10-28 14-46-39 · © 2026 Daniele Lolli (UncleDan) feat. Claude AI · <a href="https://github.com/baskin-software/generatore-calendari-baskin-excel" target="_blank" rel="noopener">GitHub</a> · licenza MIT (codice) e CC BY 4.0 (modelli)</p>
 </footer>
 <div id="gofab"><button type="button" onclick="document.getElementById('go').click()">Genera xlsx</button></div>
 <script>
@@ -335,7 +335,7 @@ function serialize(sh, extraPre) {
     const cs = [...R.cells.keys()].sort((a, b) => a - b);
     for (const c of cs) {
       const x = R.cells.get(c), ref = CL(c) + r, st = x.s ? ' s="' + x.s + '"' : '';
-      if (x.k === 'f') s += '<c r="' + ref + '"' + st + '><f>' + esc(x.v) + '</f></c>';
+      if (x.k === 'f') s += '<c r="' + ref + '"' + st + '><f' + (x.arr ? ' t="array" ref="' + ref + '"' : '') + '>' + esc(x.v) + '</f></c>';   // arr: formula matriciale (Google Sheets: ARRAYFORMULA)
       else if (x.k === 's') s += '<c r="' + ref + '"' + st + ' t="inlineStr"><is><t xml:space="preserve">' + esc(x.v) + '</t></is></c>';
       else if (x.k === 'n') s += '<c r="' + ref + '"' + st + '><v>' + x.v + '</v></c>';
       else s += '<c r="' + ref + '"' + st + '/>';
@@ -602,7 +602,7 @@ async function generate(opt) {
   }
   { const x = ws.cell(13, 6); x.s = TC[13][5][1]; setv(x, 'FC'); }
   // link alle istruzioni per l'uso del file, accanto ai parametri
-  { const x = ws.cell(1, 6); x.s = 51; setv(x, '=HYPERLINK("https://github.com/baskin-software/generatore-calendari-baskin-excel/blob/main/ISTRUZIONI.md","Istruzioni per l\'uso del file: cosa compilare e cosa non fare (clic per aprire)")'); ws.merge('F1:L1'); }
+  { const x = ws.cell(1, 6); x.s = 51; setv(x, '=HYPERLINK("https://github.com/baskin-software/generatore-calendari-baskin-excel/blob/master/ISTRUZIONI.md","Istruzioni per l\'uso del file: cosa compilare e cosa non fare (clic per aprire)")'); ws.merge('F1:L1'); }
   ws.merge('B12:W12'); ws.merge(slotcol(1) + '12:' + slotcol(NT) + '12'); for (let b = 0; b < 4; b++) ws.merge(bcol(b, 1) + '12:' + bcol(b, NT) + '12');
   const D = col => 'Dati!$' + col + '$2:$' + col + '$' + DATI_LAST;
   // scontri diretti per codice squadra: le colonne dei posti (slot) contengono i codici
@@ -671,7 +671,7 @@ async function generate(opt) {
         for (let q = 0; q < 3; q++) copyRow('Calendario A', 12 + q, cw, hdr + q, { L, over: q === 1 && ROB ? { 1: ++gnum } : (q === 1 && bi === 0 && t === 0) ? { 1: c.goff + 1 } : null });
         if (ROB) { const g = hdr + 1; (GNUM_ROW[c.name] = GNUM_ROW[c.name] || {})[g] = gnum;
           // colonne nascoste della gara: giornata (dalla barra GIORNATA piu' vicina sopra), fase e girone del blocco
-          cw.set(g, 30, '=IFERROR(LOOKUP(2,1/ISNUMBER(SEARCH("GIORNATA",$B$8:$B' + (g - 1) + ')),$A$8:$A' + (g - 1) + '),"")');
+          cw.set(g, 30, '=IFERROR(LOOKUP(2,1/ISNUMBER(SEARCH("GIORNATA",$B$8:$B' + (g - 1) + ')),$A$8:$A' + (g - 1) + '),"")'); cw.cell(g, 30).arr = true;   // matriciale: in Google Sheets diventa ARRAYFORMULA
           cw.set(g, 31, RND[k][b].fase); cw.set(g, 32, L); }
         { const g = hdr + 1, FC = x => 'COUNTIFS(Campionato!$B$' + T1 + ':$B$' + T2 + ',' + x + ',Campionato!$F$' + T1 + ':$F$' + T2 + ',"S")>0', ex = 'OR(' + FC('$C' + g) + ',' + FC('$E' + g) + ')';
           cw.set(g, 13, '=IF(OR($B' + g + '="",$D' + g + '="",' + ex + '),"(Squadra A)",$C' + g + ')'); cw.set(g, 20, '=IF(OR($B' + g + '="",$D' + g + '="",' + ex + '),"(Squadra B)",$E' + g + ')'); }   // Dati per codice squadra; le gare con una squadra fuori classifica non contano
@@ -1807,7 +1807,7 @@ function extract(M, opts) {
   const played = new Set(); for (const g of cal) if (typeof g.ra === 'number' && typeof g.rb === 'number' && g.ra + g.rb > 0) { played.add(str(g.a)); played.add(str(g.b)); }
   const fcList = [];
   for (const t of teams) { if (!t.fc && t.z && played.has(t.code)) t.fc = true; if (t.fc) fcList.push(t.name); }
-  for (const t of teams) righe.push({ t: 'sq', k: codeMap[t.code], n: t.name, p: t.pen === undefined ? '' : t.pen, fc: t.fc });
+  for (const t of teams) righe.push({ t: 'sq', k: codeMap[t.code], c: t.code, n: t.name, p: t.pen === undefined ? '' : t.pen, fc: t.fc });
   for (const f of fields) if (venueMap[f.code]) righe.push({ t: 'campo', k: venueMap[f.code], n: f.name, l: f.link });
   const gironi = letters.map((L, k) => ({ name: names[k], nt: Math.max(3, byGir[L].length), color: colors[k], sigla: NEWL[k] }));
   // ---- avvisi: cose da correggere a mano nel file di origine prima di procedere ----
@@ -1927,6 +1927,47 @@ function extract(M, opts) {
 // ---------------- fusione di piu' file ----------------
 // ogni file porta i suoi gironi in coda; codici squadra e campo rinumerati, campi neutri uniti per nome,
 // arbitri e UdC uniti per nome; i playoff dei singoli file non si importano
+// ---------------- rifinitura dopo l'importazione (un file o piu' file uniti) ----------------
+// 1) codici squadra e campo del file di origine mantenuti; se un codice si ripete (tra gironi o tra file) il secondo
+//    prende il codice di posto del nuovo modello (es. B02 = seconda squadra del girone B);
+// 2) squadre con lo stesso nome in gironi diversi: "Nome (A)", "Nome (B)";
+// 3) campi con lo stesso nome e lo stesso link alla mappa: una riga sola, le gare puntano al primo.
+function finalize(X) {
+  const R = X.data.righe, sq = R.filter(o => o.t === 'sq'), pre = c => String(c || '').replace(/\d+$/, '');
+  const used = new Set(), ren = [];
+  const take = c => { used.add(String(c).toUpperCase()); return c; };
+  for (const o of R) if (o.t === 'campo' && (/^PO\d+$/.test(o.k) || o.k === 'TBD')) used.add(o.k);
+  for (const o of sq) {
+    let c = String(o.c == null ? '' : o.c).trim();
+    if (!c || used.has(c.toUpperCase())) {
+      const old = c; c = o.k;
+      if (used.has(c.toUpperCase())) { const m = /^([A-Z]{1,3})(\d+)$/.exec(o.k); let n = m ? +m[2] : 0; do { n++; c = (m ? m[1] : pre(o.k)) + String(n).padStart(2, '0'); } while (used.has(c.toUpperCase())); }
+      if (old) ren.push(old + ' -> ' + c + ' (' + o.n + ')');
+    }
+    o.c = take(c);
+  }
+  const codeOf = {}; for (const o of sq) codeOf[o.k] = o.c;
+  for (const o of R) if (o.t === 'campo') o.c = codeOf[o.k] || o.k;
+  // omonimie tra gironi
+  const gOf = {}; for (const o of sq) { const k = String(o.n || '').trim().toLowerCase(); if (!k) continue; (gOf[k] = gOf[k] || new Set()).add(pre(o.k)); }
+  const omon = [];
+  for (const o of sq) { const k = String(o.n || '').trim().toLowerCase(); if (k && gOf[k].size > 1) { const sfx = ' (' + pre(o.k) + ')', n = String(o.n).trim(), d = n.indexOf('-');
+      // "Nome-Citta' PR": il girone va prima del trattino, cosi' compare anche nei calendari (che mostrano solo il nome)
+      if (!n.includes(sfx)) o.n = d > 0 ? n.slice(0, d).trim() + sfx + '-' + n.slice(d + 1) : n + sfx; omon.push(o.n); } }
+  // campi uguali raggruppati
+  const firstOf = new Map(), vmap = {}; let grp = 0;
+  for (let i = 0; i < R.length; i++) { const o = R[i]; if (o.t !== 'campo' || o.k === 'TBD') continue;
+    const key = String(o.n || '').trim().toLowerCase() + '|' + String(o.l || '').trim().toLowerCase(); if (!String(o.n || '').trim()) continue;
+    if (!firstOf.has(key)) { firstOf.set(key, o.k); continue; }
+    vmap[o.k] = firstOf.get(key); R.splice(i--, 1); grp++; }
+  if (grp) for (const o of R) if ((o.t === 'gara' || /^po/.test(o.t)) && o.c && vmap[o.c]) o.c = vmap[o.c];
+  X.report = X.report || [];
+  X.report.push('Codici di squadre e campi mantenuti dal file di origine' + (ren.length ? '; ' + ren.length + ' codici ripetuti rinominati col codice di posto del girone (es. ' + ren.slice(0, 4).join('; ') + ')' : '') + '.');
+  if (omon.length) X.report.push('Squadre con lo stesso nome in gironi diversi, distinte col girone tra parentesi: ' + omon.length + (omon.length > 6 ? ' (es. ' + omon.slice(0, 6).join(', ') + ')' : ' (' + omon.join(', ') + ')') + '.');
+  if (grp) X.report.push((grp === 1 ? '1 campo uguale a un altro (stesso nome e stesso link) raggruppato' : grp + ' campi uguali ad altri (stesso nome e stesso link) raggruppati') + ': le gare puntano al primo.');
+  return X;
+}
+
 function merge(list) {
   if (list.length === 1) return list[0];
   const gironi = [], righe = [], report = [], uni = [], warn = [];
@@ -1992,7 +2033,7 @@ function remap(righe, map, tm, fm, all) {
   return out;
 }
 
-return { read, extract, merge, remap, remapCode };
+return { read, extract, merge, finalize, remap, remapCode };
 })();
 if (typeof module !== 'undefined') module.exports = XL;
 
@@ -2146,7 +2187,7 @@ async function importa() {
     }
     if (errs.length) throw new Error(errs.length > 1 ? errs.length + ' file non importabili (da correggere prima di procedere):\n- ' + errs.join('\n- ') : errs[0]);
     if (!list.length) throw new Error((vuoti.length > 1 ? 'I file scelti non contengono squadre (sono modelli vuoti)' : 'Il file "' + vuoti[0] + '" non contiene squadre (e\' un modello vuoto)') + ': non c\'e\' niente da importare.');
-    const X = XL.merge(list);
+    const X = XL.finalize(XL.merge(list));   // codici del file di origine, omonimie tra gironi, campi uguali raggruppati
     if (vuoti.length) X.report = ['File ignorati perche\' non contengono squadre (modelli vuoti): ' + vuoti.join(', ') + '.', ...X.report];
     $('gironi').value = X.gironi.map((g, i) => g.name + ', ' + g.nt + ', ' + (g.color || GEN.DEFAULT_COLORS[i % GEN.DEFAULT_COLORS.length]) + ', ' + g.sigla).join('\n');
     UCL_AUTO = allG(); $('ucl').value = X.ucl != null ? X.ucl : UCL_AUTO;
@@ -2157,16 +2198,16 @@ async function importa() {
     $('pp').value = String((X.pp && X.pp.squadre) || 0); $('ppq').value = (X.pp && X.pp.qualificate) || '';
     const tsv = a => a.map(x => (x === undefined || x === null ? '' : String(x)).replace(/[\t\r\n]+/g, ' ')).join('\t');
     const sq = X.data.righe.filter(o => o.t === 'sq'), cp = X.data.righe.filter(o => o.t === 'campo');
-    $('teams').value = sq.map(o => tsv([o.k, o.n, o.p, (PFX(o.k) || [])[1] || ''])).join('\n');
-    $('fc').value = sq.filter(o => o.fc).map(o => tsv([o.k, o.n])).join('\n');
-    $('fields').value = cp.map(o => tsv([o.k, o.n, o.l])).join('\n');
+    $('teams').value = sq.map(o => tsv([o.c || o.k, o.n, o.p, (PFX(o.k) || [])[1] || ''])).join('\n');
+    $('fc').value = sq.filter(o => o.fc).map(o => tsv([o.c || o.k, o.n])).join('\n');
+    $('fields').value = cp.map(o => tsv([o.c || o.k, o.n, o.l])).join('\n');
     IMPORTED = { righe: X.data.righe.filter(o => o.t !== 'sq' && o.t !== 'campo'), origine: list.length > 1 ? X.data.origine : X.tipo + ' (' + list[0].file + ')', origins: new Set(X.gironi.map(g => g.sigla)) };
     GSNAP = X.gironi.map(g => ({ name: g.name.trim().toLowerCase(), sigla: g.sigla, origin: g.sigla })); X.gironi.forEach(g => CURMAP[g.sigla] = g.sigla);
     GREG = X.gironi.map(g => ({ origin: g.sigla, names: new Set([g.name.trim().toLowerCase()]), sigle: new Set([g.sigla]) }));
     IMPT = sq.map(o => o.k); IMPF = cp.map(o => o.k);
     sq.forEach(o => { const k = tkey({ name: o.n }); if (k && !TREG.has(k)) TREG.set(k, o.k); });
     cp.forEach(o => { const k = fkey({ name: o.n, link: o.l }); if (k !== '|' && !FREG.has(k)) FREG.set(k, o.k); });
-    TSNAP = sq.map(o => ({ code: o.k, k: tkey({ name: o.n }), g: (PFX(o.k) || [])[1] || '', id: o.k })); FSNAP = cp.map(o => ({ code: o.k, k: fkey({ name: o.n, link: o.l }), id: o.k }));
+    TSNAP = sq.map(o => ({ code: o.c || o.k, k: tkey({ name: o.n }), g: (PFX(o.k) || [])[1] || '', id: o.k })); FSNAP = cp.map(o => ({ code: o.c || o.k, k: fkey({ name: o.n, link: o.l }), id: o.k }));
     rep.textContent = X.report.join('\n'); rep.className = 'ok';
     $('warn').textContent = (X.warn && X.warn.length) ? 'Da correggere a mano nel file di origine prima di procedere:\n- ' + X.warn.join('\n- ') : '';
     preview();

@@ -44,7 +44,7 @@ Ogni riga è una squadra.
 
 | Colonna | Cosa scrivere | Attenzione |
 |---|---|---|
-| `B` – codice | Già compilato (es. `A01`) | **Non cambiarlo**: risultati e classifiche sono collegati al codice. Se proprio serve, va cambiato **anche in tutte le gare dei calendari** (colonne `C` ed `E`) e nel blocco campi; meglio farlo dal generatore |
+| `B` – codice | Già compilato: `A01`, `A02`… oppure, se il file viene da un'importazione, il codice del file di origine | **Non cambiarlo**: risultati e classifiche sono collegati al codice. Se proprio serve, va cambiato **anche in tutte le gare dei calendari** (colonne `C` ed `E`) e nel blocco campi; meglio farlo dal generatore |
 | `C` – nome | Nome della squadra, nella forma consigliata `Nome-Città PR` | Si può cambiare quando vuoi: calendari e classifiche si aggiornano. Nei calendari compare solo la parte prima del trattino |
 | `D` – penalizzazione | Punti di penalizzazione, **con il segno meno** (es. `-2`) | Il valore viene sommato ai punti in classifica: un numero positivo darebbe punti in più |
 | `E` – girone | Sigla del girone | Cambiarla **sposta la squadra in classifica**, ma non sposta le sue gare: per dividere o ricomporre i gironi usa il generatore |
