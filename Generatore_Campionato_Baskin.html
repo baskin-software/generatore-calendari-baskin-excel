@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Generatore_Campionato_Baskin.html by Daniele Lolli (UncleDan) feat. Claude AI - Release 1.36 - 2026-10-28 14-46-39 -->
+<!-- Generatore_Campionato_Baskin.html by Daniele Lolli (UncleDan) feat. Claude AI - Release 1.37 - 2026-10-28 16-14-35 -->
 <html lang="it">
 <head>
 <meta charset="utf-8">
@@ -135,7 +135,15 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 28px}
 <label>Qualificate per girone<input id="poq" type="number" autocomplete="off" min="1" max="40" value="8"></label>
 <label>Gironi (es. A,B oppure A-D; vuoto = tutti)<input id="pog" type="text" value="" autocomplete="off"></label>
 </div>
-<label class="chk" style="margin-top:10px"><input id="par" type="checkbox" autocomplete="off"> Andata e ritorno: ogni turno prima delle finali si gioca in due gare (al ritorno le squadre si scambiano il campo) e passa chi ha la migliore differenza canestri nel totale; in caso di parità si indica a mano chi passa (A o B nella riga dell'esito). Le finali restano in gara unica. Vale anche per il Torneo Primavera; non si applica ai tabelloni importati con lo schema del file di origine, dove le sfide di andata e ritorno vengono riconosciute da sole.</label>
+<div style="margin-top:10px;font-size:13px;color:var(--mut)">Turni con andata e ritorno (le altre gare e le finali 3°-4° e 1°-2° restano in gara unica):</div>
+<div style="display:flex;flex-wrap:wrap;gap:4px 14px">
+<label class="chk"><input class="par" value="64" type="checkbox" autocomplete="off"> Trentaduesimi</label>
+<label class="chk"><input class="par" value="32" type="checkbox" autocomplete="off"> Sedicesimi</label>
+<label class="chk"><input class="par" value="16" type="checkbox" autocomplete="off"> Ottavi</label>
+<label class="chk"><input class="par" value="8" type="checkbox" autocomplete="off"> Quarti</label>
+<label class="chk"><input class="par" value="4" type="checkbox" autocomplete="off"> Semifinali</label>
+</div>
+<p class="hint" style="margin-top:4px">Nei turni spuntati ogni sfida si gioca in due gare (al ritorno le squadre si scambiano il campo) e passa chi ha la migliore differenza canestri nel totale; in caso di parità si indica a mano chi passa (A o B nella riga dell'esito). Esempio: quarti in gara secca e semifinali andata e ritorno = spuntare solo "Semifinali". Vale anche per il Torneo Primavera; non si applica ai tabelloni importati con lo schema del file di origine, dove le sfide di andata e ritorno vengono riconosciute da sole.</p>
 <h2 style="margin-top:14px">Torneo Primavera (facoltativo)</h2>
 <p class="hint">Seconda griglia per le squadre non qualificate al tabellone principale: prende le posizioni successive negli stessi gironi del playoff (es. playoff con le prime 4, Primavera con le 4 successive).</p>
 <div class="grid2">
@@ -193,7 +201,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 28px}
 </ul>
 </div>
 </section>
-<p class="rev">Generatore Campionato Baskin · Release 1.36 del 2026-10-28 14-46-39 · © 2026 Daniele Lolli (UncleDan) feat. Claude AI · <a href="https://github.com/baskin-software/generatore-calendari-baskin-excel" target="_blank" rel="noopener">GitHub</a> · licenza MIT (codice) e CC BY 4.0 (modelli)</p>
+<p class="rev">Generatore Campionato Baskin · Release 1.37 del 2026-10-28 16-14-35 · © 2026 Daniele Lolli (UncleDan) feat. Claude AI · <a href="https://github.com/baskin-software/generatore-calendari-baskin-excel" target="_blank" rel="noopener">GitHub</a> · licenza MIT (codice) e CC BY 4.0 (modelli)</p>
 </footer>
 <div id="gofab"><button type="button" onclick="document.getElementById('go').click()">Genera xlsx</button></div>
 <script>
@@ -433,7 +441,13 @@ async function generate(opt) {
   const POQ = PO ? (CUSPO ? fitQ(PO) : C.poq ? +C.poq : PO / POG.length) : 0;
   if (PO && !CUSPO && (POQ * POG.length !== PO || POQ < 1)) throw new Error('Playoff: qualificate per girone x numero di gironi deve dare ' + PO + ' (ora ' + POQ + ' x ' + POG.length + ').');
   if (PO && !CUSPO) for (const L of POG) if (POQ > NTS[LET.indexOf(L)]) throw new Error('Playoff: il girone ' + L + ' ha meno di ' + POQ + ' squadre.');
-  const PAR = !!C.par && C.par !== '0' && C.par !== 'false';   // playoff con andata e ritorno (finali in gara unica)
+  // playoff: turni con andata e ritorno, indicati col numero di squadre del turno (64, 32, 16, 8 = quarti, 4 = semifinali);
+  // true = tutti i turni prima delle finali (le finali restano sempre in gara unica)
+  const PARSET = C.par === true || C.par === 'true' || C.par === '1' ? new Set([64, 32, 16, 8, 4])
+    : new Set(String(C.par || '').split(/[,;\s]+/).map(Number).filter(n => [64, 32, 16, 8, 4].includes(n)));
+  const PAR = PARSET.size > 0;
+  const PARNAME = { 64: 'trentaduesimi', 32: 'sedicesimi', 16: 'ottavi', 8: 'quarti', 4: 'semifinali' };
+  const PARTXT = [64, 32, 16, 8, 4].filter(n => PARSET.has(n)).map(n => PARNAME[n]).join(', ');
   const PP = C.pp === undefined || C.pp === '' ? 0 : +C.pp;
   if (!okN(PP)) throw new Error('Torneo Primavera: le squadre devono essere 0 oppure da 2 a 64.');
   if (PP && !PO) throw new Error('Il Torneo Primavera richiede il playoff principale.');
@@ -730,20 +744,20 @@ async function generate(opt) {
     // andata e ritorno: ogni turno prima delle finali si gioca in due gare (al ritorno le squadre si scambiano il campo) e passa
     // chi ha la migliore differenza canestri nel totale; in caso di parita' si scrive A o B nella casella dell'esito. Le finali restano in gara unica.
     // Nei tabelloni importati con lo schema di origine le coppie andata/ritorno sono quelle trovate nel file.
-    const AR = !SCH && PAR;
+    const AR = !SCH && PAR, two2 = s => AR && !s.fin && PARSET.has(s.n);   // turno con andata e ritorno
     const TPAIR = new Map(); if (SCH && Array.isArray(SCH.ties)) for (const t of SCH.ties) TPAIR.set(t[1] | 0, t[0] | 0);   // ordine ritorno -> ordine andata
     B.TIES = []; B.LEG = []; B.ESITI = [];
     let cur = 8, ordc = 0;
     SECT.forEach((s, si) => {
       const bar = cur; B.PBAR.push(bar);
-      copyRow('Playoff', 8, pw, bar, { over: { 2: SCH ? (/PLAY.?OFF|PRIMAVERA/i.test(s.title) ? s.title : TOP + ' - ' + s.title) : TOP + ' A ' + P + ' - ' + s.title + (AR && !s.fin ? ' (ANDATA E RITORNO)' : '') } }); pw.merge('B' + bar + ':L' + bar);
+      copyRow('Playoff', 8, pw, bar, { over: { 2: SCH ? (/PLAY.?OFF|PRIMAVERA/i.test(s.title) ? s.title : TOP + ' - ' + s.title) : TOP + ' A ' + P + ' - ' + s.title + (two2(s) ? ' (ANDATA E RITORNO)' : '') } }); pw.merge('B' + bar + ':L' + bar);
       const lst = [], ties = [], legs = []; let y = bar + 1;
       if (SCH) for (let i = 0; i < s.ng; i++) {
         lst.push([y, y + 1, y + 2]); legs.push(''); y += 3; const o = ordc++;
         if (TPAIR.has(o)) { B.ESITI.push({ a: TPAIR.get(o), r: o, ex: y }); y += 1; }
       }
       else for (let i = 0; i < s.ng; i++) {
-        const bye = si === 0 && !s.fin && P2 - 1 - i >= P, two = AR && !s.fin && !bye, a = lst.length;
+        const bye = si === 0 && !s.fin && P2 - 1 - i >= P, two = two2(s) && !bye, a = lst.length;
         lst.push([y, y + 1, y + 2]); legs.push(two ? 'andata' : ''); y += 3;
         if (two) { lst.push([y, y + 1, y + 2]); legs.push('ritorno'); y += 3; ties.push({ a, r: a + 1, ex: y, ref: y, num: lst[a + 1][1] }); y += 1; }
         else ties.push({ a, r: a, ref: lst[a][1], num: lst[a][1] });
@@ -801,7 +815,7 @@ async function generate(opt) {
     const chi = (rank0 ? 'le classificate dalla ' + (rank0 + 1) + 'a alla ' + (rank0 + Q) + 'a' : 'le prime ' + Q + ' classificate') + ' ' + (POG.length > 1 ? 'dei gironi ' + POG.join(', ') : 'del girone ' + POG[0]);
     const notes = [TOP.charAt(0) + TOP.slice(1).toLowerCase() + ' a ' + P + ' squadre: ' + chi + '.',
       'Primo turno: ' + Array.from({ length: Math.max(1, P2 / 2) }, (_, i) => seeds[i] + '-' + (P2 - 1 - i >= P ? 'BYE' : seeds[P2 - 1 - i])).join(', ') + (P2 > P ? ' (BYE = passa il turno senza giocare)' : '') + ' (teste di serie: prima la posizione, poi la lettera del girone; la prima incontra l\'ultima, la seconda la penultima, e cosi\' via).',
-      'Turni successivi: vincente della gara 1 contro vincente dell\'ultima gara del turno, 2 contro penultima, e cosi\' via.' + (P2 >= 4 ? ' Finali: perdenti semifinali = finale 3o-4o posto; vincenti = finale 1o-2o posto.' : '') + (AR ? ' Andata e ritorno (finali in gara unica): al ritorno le squadre si scambiano il campo e passa chi ha la migliore differenza canestri nel totale; in caso di parita\' si scrive A o B nella casella a destra della riga dell\'esito.' : ''),
+      'Turni successivi: vincente della gara 1 contro vincente dell\'ultima gara del turno, 2 contro penultima, e cosi\' via.' + (P2 >= 4 ? ' Finali: perdenti semifinali = finale 3o-4o posto; vincenti = finale 1o-2o posto.' : '') + (SECT.some(two2) ? ' Andata e ritorno (' + SECT.filter(two2).map(x => x.lab.toLowerCase()).join(', ') + '; le altre gare in gara unica): al ritorno le squadre si scambiano il campo e passa chi ha la migliore differenza canestri nel totale; in caso di parita\' si scrive A o B nella casella a destra della riga dell\'esito.' : ''),
       'Sfondo verde: campo ancora da definire (codice TBD).'];
     if (SCH) notes.splice(0, 3, TOP.charAt(0) + TOP.slice(1).toLowerCase() + ' importato con lo schema del file di origine (' + SECT.map(x => x.title.toLowerCase() + ': ' + (x.ng === 1 ? '1 gara' : x.ng + ' gare')).join('; ') + ').',
       'Squadre scritte gara per gara nelle colonne C ed E (codice squadra, oppure girone e posizione come A3): i turni successivi non si ricavano da soli, salvo le gare collegate a vincente o perdente di una gara precedente.' + (B.ESITI.length ? ' Andata e ritorno: sotto ogni gara di ritorno il totale delle due gare e chi passa (migliore differenza canestri; in caso di parita\' scrivere A o B nella casella a destra).' : '') + (B.custom === 'vuota' ? ' Griglia vuota: squadre e risultati da scrivere a mano.' : ''));
@@ -1229,7 +1243,7 @@ async function generate(opt) {
     ['n', '* Calendario: ' + LET.map((L, k) => ORIG.includes(k) ? L + ' come nel file di origine (' + NRk[k] + ' giornate' + (RND[k].some(x => x.fase === 'Ritorno') ? ', andata e ritorno' : '') + ')' : L + ' girone all\'italiana ' + (AR ? 'di andata e ritorno, ' : 'di sola andata, ') + NRk[k] + ' giornate da ' + RND[k][0].ng + ' gare' + (NTS[k] % 2 ? ' (ogni giornata una squadra riposa)' : '')).join('; ') + '; ' + GTOT + ' gare in totale.'],
     ['n', PO ? '* Playoff a ' + PO + ' squadre: le prime ' + POQ + ' ' + (POG.length > 1 ? 'dei gironi ' + POG.join(', ') : 'del girone ' + POG[0]) + '; gare numerate dalla ' + (GTOT + 1) + ' alla ' + (GTOT + BR[0].ngames) + '.' : '* Nessun playoff.'],
     ...(PP ? [['n', '* Torneo Primavera a ' + PP + ' squadre: le classificate dalla ' + (POQ + 1) + 'a alla ' + (POQ + PPQ) + 'a ' + (POG.length > 1 ? 'dei gironi ' + POG.join(', ') : 'del girone ' + POG[0]) + '; gare numerate dalla ' + BR[1].first + ' alla ' + (BR[1].first + BR[1].ngames - 1) + '. In classifica finale occupa le posizioni dalla ' + (PO + 1) + 'a alla ' + (PO + PP) + 'a.']] : []),
-    ...(PAR && PO ? [['n', '* Playoff con andata e ritorno (finali in gara unica): al ritorno le squadre si scambiano il campo; passa chi ha la migliore differenza canestri nel totale delle due gare, indicata nella riga dell\'esito; in caso di parita\' si scrive A o B nella casella a destra.']] : []),
+    ...(PAR && PO ? [['n', '* Playoff con andata e ritorno nei turni: ' + PARTXT + ' (le altre gare, finali comprese, in gara unica): al ritorno le squadre si scambiano il campo; passa chi ha la migliore differenza canestri nel totale delle due gare, indicata nella riga dell\'esito; in caso di parita\' si scrive A o B nella casella a destra.']] : []),
     ['n', '* Classifica secondo i criteri Baskin: punti, poi vittorie negli scontri diretti, quoziente canestri negli scontri diretti, quoziente canestri totale, ordine alfabetico.'],
     ['n', '* Squadre fuori classifica: S in colonna F (FC) del foglio Campionato. I loro risultati restano nei calendari ma la gara non conta per nessuna delle due squadre (ne\' vittoria ne\' sconfitta, ne\' punti per i quozienti); in classifica sono in fondo al girone, in ordine alfabetico, evidenziate in giallo, con (f.c.) e tutti i valori a "-". Nel RIEPILOGO la colonna FC indica A, B o AB.'],
     ['n', '* Il girone di una squadra dipende SOLO dalla sigla in colonna E del foglio Campionato. I risultati sono collegati al CODICE squadra (colonna B), che deve essere unico: il nome si puo\' cambiare in qualsiasi momento e puo\' ripetersi in gironi diversi. Anche i codici dei campi devono essere unici. Il foglio nascosto Dati consolida le righe di servizio dei calendari.'],
@@ -2043,7 +2057,7 @@ const $ = id => document.getElementById(id);
 // ---------- valori iniziali (anche dopo Reset; il browser non deve riproporre valori vecchi) ----------
 const DEF = { gironi: 'Gold, 10, gold', cfg: ['Campionato Baskin', '', '', 'A', '2026/2027', '3', '1', '0', '40-0', 'Gold'].join('\n'), uni: '', po: '8', poq: '8', pog: '', pp: '0', ppq: '', narb: '', nudc: '', teams: '', fields: '', fc: '' };
 let UCL_AUTO = '';
-function setDefaults() { for (const k in DEF) $(k).value = DEF[k]; $('note').checked = false; $('prov').checked = false; $('orig').checked = true; $('ar').checked = false; $('par').checked = false; $('pos').checked = false; $('provx').checked = false; $('ucl').value = UCL_AUTO = allG(); $('warn').textContent = ''; }
+function setDefaults() { for (const k in DEF) $(k).value = DEF[k]; $('note').checked = false; $('prov').checked = false; $('orig').checked = true; $('ar').checked = false; document.querySelectorAll('.par').forEach(x => x.checked = false); $('pos').checked = false; $('provx').checked = false; $('ucl').value = UCL_AUTO = allG(); $('warn').textContent = ''; }
 setDefaults();
 function preview() {
   const { gironi, err } = GEN.parseGironi($('gironi').value); const S = GEN.sigle(gironi); let h = '';
@@ -2235,7 +2249,7 @@ $('go').addEventListener('click', async () => {
     if (typeof CompressionStream === 'undefined') throw new Error('Il browser non supporta CompressionStream: usare una versione recente di Chrome, Edge, Firefox o Safari.');
     const { gironi, err } = GEN.parseGironi($('gironi').value); if (err.length) throw new Error(err.join(' '));
     if (gironiSync()) snapAll(); else onTeams();
-    const cfg = { po: $('po').value, poq: $('poq').value, pog: $('pog').value.trim(), pp: $('pp').value, ppq: $('ppq').value, narb: $('narb').value.trim(), nudc: $('nudc').value.trim(), uni: $('uni').value.trim(), ucl: $('ucl').value.trim(), note: $('note').checked, prov: $('prov').checked, provx: $('prov').checked && $('provx').checked, orig: $('orig').checked, ar: $('ar').checked, par: $('par').checked, pos: $('pos').checked };
+    const cfg = { po: $('po').value, poq: $('poq').value, pog: $('pog').value.trim(), pp: $('pp').value, ppq: $('ppq').value, narb: $('narb').value.trim(), nudc: $('nudc').value.trim(), uni: $('uni').value.trim(), ucl: $('ucl').value.trim(), note: $('note').checked, prov: $('prov').checked, provx: $('prov').checked && $('provx').checked, orig: $('orig').checked, ar: $('ar').checked, par: [...document.querySelectorAll('.par:checked')].map(x => x.value).join(','), pos: $('pos').checked };
     const T = GEN.parseTeams($('teams').value), F = GEN.parseFields($('fields').value);
     [...T.err, ...F.err, ...GEN.applyFC($('fc').value, T.rows)].forEach(w => say('Attenzione: ' + w, 'err'));
     const BX = GEN.boxRecords(T.rows, F.rows, gironi); BX.warn.forEach(w => say('Attenzione: ' + w, 'err'));

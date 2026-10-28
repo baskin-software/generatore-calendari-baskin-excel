@@ -77,17 +77,32 @@ Ogni gara occupa **tre righe**: intestazione ("Gara N."), riga della gara, riga 
 ### Cosa compilare per ogni gara
 
 1. **Colonna `C`**: codice della squadra di casa (es. `A03`). **Colonna `E`**: codice della squadra ospite. Il nome compare da solo.
-2. **Colonna `F`**: data e ora insieme (es. `12/10/2026 15:30`).
+2. **Colonna `F`**: data e ora insieme, scritte così: `12/10/2026 15:30` (vedi sotto **Come scrivere data e ora**).
 3. **Riga sotto, colonna `I`**: codice del campo (di solito il codice della squadra di casa, oppure `PO1`-`PO8` o `TBD`). Il nome del campo compare da solo.
 4. **Colonne `J` e `L`**: punti delle due squadre, a gara giocata.
    * **Gara persa a tavolino**: scrivi il punteggio di `D10` (es. `40` e `0` se perde la squadra ospite, `0` e `40` se perde quella di casa). La classifica applica i punti forfait e il RIEPILOGO la segnala in "Esiti Speciali".
    * **Gara non ancora giocata**: lascia `J` e `L` vuoti (non scrivere `0-0`).
 
+### Come scrivere data e ora
+
+La cella della data è **formattata**: dopo averla scritta mostra per esempio `dom 12-ott-2026 ore 15:30`. Quella è solo la *visualizzazione*: **non va ricopiata così**, altrimenti diventa un testo che il file non riconosce come data.
+
+* **Scrivi**: giorno/mese/anno, uno spazio, ore:minuti → `12/10/2026 15:30` (va bene anche l'anno a due cifre, `12/10/26 15:30`). Il giorno della settimana e la parola "ore" li aggiunge il formato.
+* **Non scrivere**: `dom 12-ott-2026 ore 15:30`, `domenica 12 ottobre`, `12 ott`, `15,30`, `h 15:30`, e non mettere l'apostrofo davanti (`'12/10/2026`).
+* **Come controllare**: dopo Invio la cella deve mostrare `dom 12-ott-2026 ore 15:30` (con il giorno della settimana). Se invece resta **esattamente come l'hai scritta**, magari allineata a sinistra, è un testo: cancellala e riscrivila nella forma giusta.
+* **Impostazioni della lingua**: il file legge le date come giorno/mese/anno solo se il programma è impostato sull'Italia.
+  * **Google Sheets**: menu *File > Impostazioni* > *Impostazioni internazionali*: **Italia** (altrimenti `12/10` diventa 10 dicembre, oppure non viene riconosciuto).
+  * **Excel**: dipende dalle impostazioni internazionali del computer. Se non sono italiane, scrivi la data nel formato internazionale `2026-10-12 15:30`, che funziona ovunque.
+* **Solo la data**, ora ancora da decidere: scrivi `12/10/2026` (l'ora risulterà 0:00); quando l'ora è nota, riscrivi data e ora insieme.
+* **Copia e incolla** da messaggi o altri documenti: incolla **solo il testo** e poi controlla come sopra; se serve riscrivi a mano.
+
+Una data scritta come testo non entra nel `Calendario.ics` e nel `RIEPILOGO` resta senza giorno e ora separati.
+
 ### Cosa non fare
 
 * **Non scrivere i nomi delle squadre** in `C` ed `E`: servono i **codici**.
 * **Non scrivere risultati come testo** (es. `"80 - 60"` in una sola cella, oppure `nd`): solo numeri, in `J` e `L`.
-* **Non scrivere la data come testo** (es. `16 Mar`): scrivila come data, oppure lascia la cella vuota.
+* **Non scrivere la data come testo** (es. `16 Mar` oppure ricopiando `dom 12-ott-2026 ore 15:30`): scrivila come `12/10/2026 15:30`, oppure lascia la cella vuota.
 * **Non modificare la colonna `A`** (numero di gara) delle gare esistenti, né la barra "GIORNATA" in cima a ogni giornata.
 * **Non toccare le colonne nascoste** a destra (`M` e seguenti): fanno i conti per le classifiche.
 
@@ -237,6 +252,7 @@ Rigenera quando devi:
 | Una gara giocata non conta in classifica | Risultato scritto come testo, gara con squadra fuori classifica, numero di gara ripetuto o fuori intervallo, gara spostata in un altro foglio calendario | Controlla `J`/`L`, la colonna `FC` e la riga di controllo del `MEMO` |
 | Numero di gara in rosso | Numero ripetuto nello stesso foglio | Dai alla gara un numero nuovo nell'intervallo del `MEMO` |
 | La giornata di una gara nel `RIEPILOGO` è sbagliata | La gara è sotto la barra di un'altra giornata | Spostala sotto la barra giusta |
+| La data resta come l'ho scritta (es. `dom 12-ott-2026 ore 15:30` scritto a mano) e non ha il formato degli altri | È un testo, non una data | Riscrivila come `12/10/2026 15:30`; in Google Sheets controlla che le impostazioni internazionali siano su Italia |
 | Il campo non compare | Codice campo mancante o sbagliato nella riga sotto la gara | Scrivi il codice in colonna `I` della riga del campo |
 | Il logo non si vede | Link non pubblico o non più valido, oppure versione di Excel senza `IMAGE` | Usa un link pubblico e stabile all'immagine |
 | La colonna dei provvedimenti nel `RIEPILOGO` è vuota | File dei provvedimenti non aperto (Excel) o link mancante (Google Sheets) | Vedi il punto 8 |
