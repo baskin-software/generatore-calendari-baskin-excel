@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Generatore_Campionato_Baskin.html by Daniele Lolli (UncleDan) feat. Claude AI - Release 1.37 - 2026-10-28 16-14-35 -->
+<!-- Generatore_Campionato_Baskin.html by Daniele Lolli (UncleDan) feat. Claude AI - Release 1.38 - 2026-10-28 16-23-53 -->
 <html lang="it">
 <head>
 <meta charset="utf-8">
@@ -129,7 +129,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 28px}
 </section>
 <section class="card">
 <h2>Playoff</h2>
-<p class="hint">Squadre: 0 (nessun playoff) oppure da 2 a 64. Qualificate per girone × gironi deve dare il numero di squadre. Se il numero non è una potenza di 2 (es. 12) il tabellone si completa con dei BYE come nel tennis: le teste di serie migliori passano il primo turno senza giocare.</p>
+<p class="hint">Squadre: 0 (nessun playoff) oppure da 2 a 64. Qualificate per girone × gironi deve dare il numero di squadre: cambiando le squadre o i gironi del playoff le qualificate per girone si aggiornano da sole (es. 8 squadre da un girone unico = 8 qualificate). Se il numero non è una potenza di 2 (es. 12) il tabellone si completa con dei BYE come nel tennis: le teste di serie migliori passano il primo turno senza giocare.</p>
 <div class="grid2">
 <label>Squadre<input id="po" type="number" autocomplete="off" min="0" max="64" value="8"></label>
 <label>Qualificate per girone<input id="poq" type="number" autocomplete="off" min="1" max="40" value="8"></label>
@@ -201,7 +201,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 28px}
 </ul>
 </div>
 </section>
-<p class="rev">Generatore Campionato Baskin · Release 1.37 del 2026-10-28 16-14-35 · © 2026 Daniele Lolli (UncleDan) feat. Claude AI · <a href="https://github.com/baskin-software/generatore-calendari-baskin-excel" target="_blank" rel="noopener">GitHub</a> · licenza MIT (codice) e CC BY 4.0 (modelli)</p>
+<p class="rev">Generatore Campionato Baskin · Release 1.38 del 2026-10-28 16-23-53 · © 2026 Daniele Lolli (UncleDan) feat. Claude AI · <a href="https://github.com/baskin-software/generatore-calendari-baskin-excel" target="_blank" rel="noopener">GitHub</a> · licenza MIT (codice) e CC BY 4.0 (modelli)</p>
 </footer>
 <div id="gofab"><button type="button" onclick="document.getElementById('go').click()">Genera xlsx</button></div>
 <script>
@@ -438,8 +438,11 @@ async function generate(opt) {
   const minNT = Math.min(...POG.map(L => NTS[LET.indexOf(L)]));
   const fitQ = n => Math.max(1, Math.min(Math.ceil(n / POG.length), minNT));
   const CUSPO = hasSch('po', PO);
+  // messaggio chiaro: squadre del playoff = qualificate per girone x gironi del playoff
+  const qErr = (w, n, q) => { const g = POG.length, gt = g === 1 ? '1 girone (' + POG[0] + ')' : g + ' gironi (' + POG.join(', ') + ')';
+    return w + ': ' + n + ' squadre da ' + gt + (n % g ? ' non si dividono in parti uguali: scegliere un numero di squadre multiplo di ' + g + ' oppure cambiare i gironi del playoff.' : ' vogliono ' + (n / g) + ' qualificate per girone, ma la casella "Qualificate per girone" dice ' + q + ': correggere una delle due (' + (n / g) + ' x ' + g + ' = ' + n + ').'); };
   const POQ = PO ? (CUSPO ? fitQ(PO) : C.poq ? +C.poq : PO / POG.length) : 0;
-  if (PO && !CUSPO && (POQ * POG.length !== PO || POQ < 1)) throw new Error('Playoff: qualificate per girone x numero di gironi deve dare ' + PO + ' (ora ' + POQ + ' x ' + POG.length + ').');
+  if (PO && !CUSPO && (POQ * POG.length !== PO || POQ < 1)) throw new Error(qErr('Playoff', PO, POQ));
   if (PO && !CUSPO) for (const L of POG) if (POQ > NTS[LET.indexOf(L)]) throw new Error('Playoff: il girone ' + L + ' ha meno di ' + POQ + ' squadre.');
   // playoff: turni con andata e ritorno, indicati col numero di squadre del turno (64, 32, 16, 8 = quarti, 4 = semifinali);
   // true = tutti i turni prima delle finali (le finali restano sempre in gara unica)
@@ -453,7 +456,7 @@ async function generate(opt) {
   if (PP && !PO) throw new Error('Il Torneo Primavera richiede il playoff principale.');
   const CUSPP = hasSch('po2', PP);
   const PPQ = PP ? (CUSPP ? Math.max(0, Math.min(Math.ceil(PP / POG.length), minNT - POQ)) : C.ppq ? +C.ppq : PP / POG.length) : 0;
-  if (PP && !CUSPP && (PPQ * POG.length !== PP || PPQ < 1)) throw new Error('Torneo Primavera: qualificate per girone x numero di gironi deve dare ' + PP + ' (ora ' + PPQ + ' x ' + POG.length + ').');
+  if (PP && !CUSPP && (PPQ * POG.length !== PP || PPQ < 1)) throw new Error(qErr('Torneo Primavera', PP, PPQ));
   if (PP && !CUSPP) for (const L of POG) if (POQ + PPQ > NTS[LET.indexOf(L)]) throw new Error('Torneo Primavera: il girone ' + L + ' ha meno di ' + (POQ + PPQ) + ' squadre.');
   const NARB = Math.max(0, parseInt(C.narb, 10) || 0), NUDC = Math.max(0, parseInt(C.nudc, 10) || 0);   // 0 o vuoto = foglio non creato
 
@@ -2166,6 +2169,14 @@ function onTeams() {   // codice squadra cambiato: il campo di casa lo segue (sc
   FSNAP = matchSnap(FSNAP, GEN.parseFields($('fields').value).rows, fkey, FREG);
 }
 // classifiche raggruppate: finche' il campo contiene tutti i gironi (il default) segue i gironi aggiunti o tolti
+// qualificate per girone: si aggiornano da sole quando cambiano le squadre del playoff o i gironi qualificati
+function playoffGir() { let S = []; try { S = GEN.sigle(GEN.parseGironi($('gironi').value).gironi); } catch (e) {}
+  const t = $('pog').value.trim().toUpperCase(); if (!t) return Math.max(1, S.length); let n = 0;
+  for (const x of t.split(/[,;\s]+/).filter(Boolean)) { const m = /^([A-Z]{1,3})-([A-Z]{1,3})$/.exec(x); n += m && S.includes(m[1]) && S.includes(m[2]) ? S.indexOf(m[2]) - S.indexOf(m[1]) + 1 : 1; }
+  return Math.max(1, n); }
+function syncQ() { const g = playoffGir(); for (const [a, b] of [['po', 'poq'], ['pp', 'ppq']]) { const n = +$(a).value; if (n > 0 && n % g === 0) $(b).value = n / g; } }
+['po', 'pp', 'pog'].forEach(id => $(id).addEventListener('input', syncQ));
+$('gironi').addEventListener('change', syncQ);
 function allG() { try { const S = GEN.sigle(GEN.parseGironi($('gironi').value).gironi); return S.length > 2 ? S[0] + '-' + S[S.length - 1] : S.join(','); } catch (e) { return ''; } }
 function gironiSync() { const was = $('ucl').value.trim() === UCL_AUTO; const ch = syncBoxes(); const a = allG(); if (was) $('ucl').value = a; UCL_AUTO = a; return ch; }
 $('gironi').addEventListener('change', () => { if (gironiSync()) snapAll(); });
