@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Generatore_Campionato_Baskin.html by Daniele Lolli (UncleDan) feat. Claude AI - Release 1.40 - 2026-10-28 17-34-07 -->
+<!-- Generatore_Campionato_Baskin.html by Daniele Lolli (UncleDan) feat. Claude AI - Release 1.41 - 2026-10-28 17-39-32 -->
 <html lang="it">
 <head>
 <meta charset="utf-8">
@@ -201,7 +201,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 28px}
 </ul>
 </div>
 </section>
-<p class="rev">Generatore Campionato Baskin · Release 1.40 del 2026-10-28 17-34-07 · © 2026 Daniele Lolli (UncleDan) feat. Claude AI · <a href="https://github.com/baskin-software/generatore-calendari-baskin-excel" target="_blank" rel="noopener">GitHub</a> · licenza MIT (codice) e CC BY 4.0 (modelli)</p>
+<p class="rev">Generatore Campionato Baskin · Release 1.41 del 2026-10-28 17-39-32 · © 2026 Daniele Lolli (UncleDan) feat. Claude AI · <a href="https://github.com/baskin-software/generatore-calendari-baskin-excel" target="_blank" rel="noopener">GitHub</a> · licenza MIT (codice) e CC BY 4.0 (modelli)</p>
 </footer>
 <div id="gofab"><button type="button" onclick="document.getElementById('go').click()">Genera xlsx</button></div>
 <script>
@@ -1842,7 +1842,6 @@ function extract(M, opts) {
   const gironi = letters.map((L, k) => ({ name: names[k], nt: Math.max(3, byGir[L].length), color: colors[k], sigla: NEWL[k] }));
   // ---- avvisi: cose da correggere a mano nel file di origine prima di procedere ----
   const warn = [];
-  if (phantom.length) warn.push('righe dell\'elenco squadre non importate perche\' sono segnaposto mai usati in una gara: ' + phantom.map(n => '"' + n + '"').join(', ') + '.');
   const nG = n => n === 1 ? '1 gara' : n + ' gare';
   { const sh = calSheets.map(n => S[n]);
     // colonne spostate: righe "Gara N." senza il trattino del risultato in colonna K
@@ -1893,6 +1892,7 @@ function extract(M, opts) {
     'Designazioni lette: ' + desN + (desSkip ? ' (' + desSkip + ' senza gara corrispondente)' : '') + '; arbitri: ' + narb + '; ufficiali di campo: ' + nudc + '.'
   ];
   if (forfNote) report.push(forfNote);
+  if (phantom.length) report.push('Righe segnaposto dell\'elenco squadre non usate in nessuna gara, non importate come squadre: ' + phantom.map(n => '"' + n + '"').join(', ') + '.');
   if (phNotes) report.push(phNotes + (phNotes === 1 ? ' gara' : ' gare') + ' con un segnaposto al posto della squadra o del campo (' + [...new Set([...Object.values(phTeam), ...Object.values(phField)].map(x => '"' + x + '"'))].join(', ') + '): le squadre segnaposto restano vuote, i campi segnaposto diventano TBD (da definire) e il testo va nel foglio Note.');
   if (vNotes) report.push(vNotes + ' note scritte nella riga del campo (senza codice campo) portate nel foglio Note.');
   if (B1 && B1.bye) report.push('Playoff a ' + B1.size + ' squadre con ' + B1.bye + ' BYE: le teste di serie migliori passano il primo turno senza giocare; risultati del tabellone collegati alle gare del nuovo modello' + (B1.miss ? ' (' + B1.miss + ' gare non collegate, da reinserire)' : '') + '.');
@@ -2038,7 +2038,7 @@ function merge(list) {
     if (X.uni) for (const line of X.uni.split('\n')) if (line) uni.push(line.split(',').map(L => smap[L] || L).join(','));
     if (!params) params = X.params.slice();
     report.push('File ' + (j + 1) + ' (' + X.file + '): ' + X.tipo + ', ' + n + ' giron' + (n > 1 ? 'i' : 'e') + ' -> ' + newS.join(', ') + ', ' + X.data.righe.filter(o => o.t === 'sq').length + ' squadre, ' + X.data.righe.filter(o => o.t === 'gara').length + ' gare' + (X.po && X.po.squadre ? ' (playoff del file non importato)' : '') + '.');
-    for (const l of X.report) if (/^(Punteggio forfait|Campi non legati|\d+ gar[ae] con un segnaposto)/.test(l)) report.push('File ' + (j + 1) + ': ' + l);
+    for (const l of X.report) if (/^(Punteggio forfait|Campi non legati|Righe segnaposto|\d+ gar[ae] con un segnaposto)/.test(l)) report.push('File ' + (j + 1) + ': ' + l);
     off += n;
   });
   if (PRIO) {
