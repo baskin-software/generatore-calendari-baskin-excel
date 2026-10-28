@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Generatore_Campionato_Baskin.html by Daniele Lolli (UncleDan) feat. Claude AI - Release 1.38 - 2026-10-28 16-23-53 -->
+<!-- Generatore_Campionato_Baskin.html by Daniele Lolli (UncleDan) feat. Claude AI - Release 1.40 - 2026-10-28 17-34-07 -->
 <html lang="it">
 <head>
 <meta charset="utf-8">
@@ -201,7 +201,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 16px 28px}
 </ul>
 </div>
 </section>
-<p class="rev">Generatore Campionato Baskin · Release 1.38 del 2026-10-28 16-23-53 · © 2026 Daniele Lolli (UncleDan) feat. Claude AI · <a href="https://github.com/baskin-software/generatore-calendari-baskin-excel" target="_blank" rel="noopener">GitHub</a> · licenza MIT (codice) e CC BY 4.0 (modelli)</p>
+<p class="rev">Generatore Campionato Baskin · Release 1.40 del 2026-10-28 17-34-07 · © 2026 Daniele Lolli (UncleDan) feat. Claude AI · <a href="https://github.com/baskin-software/generatore-calendari-baskin-excel" target="_blank" rel="noopener">GitHub</a> · licenza MIT (codice) e CC BY 4.0 (modelli)</p>
 </footer>
 <div id="gofab"><button type="button" onclick="document.getElementById('go').click()">Genera xlsx</button></div>
 <script>
@@ -1544,6 +1544,12 @@ function extract(M, opts) {
     const ix = str(get(camp, r, 9)), kg = get(camp, r, 11);
     teams.push({ code, name, pen, gir, fc: /^(X|S|SI|SÌ)$/.test(str(get(camp, r, 6)).toUpperCase()), z: ix.startsWith('|') && kg === 0, row: r });
   }
+  // righe segnaposto nell'elenco squadre e dei campi ("RINVIATA A DATA DA DESTINARSI", "LUOGO DA DEFINIRE"...): non sono squadre ne' campi.
+  // Squadra segnaposto in una gara di calendario: lato lasciato vuoto e testo nel foglio Note (se e' usata nei fogli di playoff resta squadra).
+  const PH_RE = /RINVIAT|DA DESTINARSI|DA DEFINIRE/i, phTxt = n => { n = String(n).trim(); return n.charAt(0).toUpperCase() + n.slice(1).toLowerCase(); };
+  const phantom = [], phTeam = {};
+  { const usedC = new Set(), usedP = new Set(); for (const n of M.order) if (/^(Calendario|Playoff|Coppa)/.test(n) || /Primavera/.test(n)) { const sh = S[n], cal = /^Calendario/.test(n); if (sh) for (const r of sh.cells.keys()) for (const c of [3, 5]) (cal ? usedC : usedP).add(str(get(sh, r, c))); }
+    for (let i = teams.length - 1; i >= 0; i--) if (PH_RE.test(teams[i].name) && !usedP.has(teams[i].code)) { const t = teams.splice(i, 1)[0]; if (usedC.has(t.code)) phTeam[t.code] = t.name; else phantom.unshift(t.name); } }
   const letters = []; for (const t of teams) if (!letters.includes(t.gir)) letters.push(t.gir);
   // se un girone ha squadre con nome, le righe senza nome sono solo posti liberi
   for (const L of letters) { const named = teams.filter(t => t.gir === L && t.name); if (named.length) for (let i = teams.length - 1; i >= 0; i--) if (teams[i].gir === L && !teams[i].name) teams.splice(i, 1); }
@@ -1571,15 +1577,22 @@ function extract(M, opts) {
   if (fh) for (let r = fh + 1; r <= fh + 3000; r++) { const code = str(get(camp, r, 2)); if (!code) break; const name = str(get(camp, r, 3)), link = str(get(camp, r, 4)); if (name || link) fields.push({ code, name, link }); }
   const venueMap = {}; let freePO = 1; const usedPO = new Set(fields.filter(f => /^PO\d+$/.test(f.code)).map(f => f.code));
   const extraFields = [];
-  for (const f of fields) {
+  // troppi campi non legati a una squadra per gli 8 campi neutri: prima quelli usati nelle gare (nell'ordine del file), poi gli altri
+  let fOrder = fields;
+  { const free = 8 - usedPO.size, extra = fields.filter(f => !codeMap[f.code] && !/^PO\d+$/.test(f.code) && f.code !== 'TBD' && !PH_RE.test(f.name));
+    if (extra.length > free) { const usedV = new Set(); for (const n of M.order) if (/^(Calendario|Playoff|Coppa)/.test(n) || /Primavera/.test(n)) { const sh = S[n]; if (sh) for (const r of sh.cells.keys()) usedV.add(str(get(sh, r, 9))); }
+      fOrder = fields.filter(f => !extra.includes(f) || usedV.has(f.code)).concat(extra.filter(f => !usedV.has(f.code))); } }
+  const phField = {};
+  for (const f of fOrder) {
     if (codeMap[f.code]) venueMap[f.code] = codeMap[f.code];
+    else if (PH_RE.test(f.name) && f.code !== 'TBD' && !/^PO\d+$/.test(f.code)) { venueMap[f.code] = 'TBD'; phField[f.code] = f.name; }
     else if (/^PO\d+$/.test(f.code) || f.code === 'TBD') venueMap[f.code] = f.code;
     else { while (usedPO.has('PO' + freePO)) freePO++; if (freePO <= 8) { venueMap[f.code] = 'PO' + freePO; usedPO.add('PO' + freePO); extraFields.push(f.code + ' -> PO' + freePO); } else extraFields.push(f.code + ' (nessun posto libero)'); }
   }
   const vmap = c => { c = str(c); if (!c) return ''; return venueMap[c] || codeMap[c] || c; };
   // gare (blocchi "Gara N." + riga con "-" in colonna K)
   const PO_RT = /(FINAL|QUART|OTTAV|SEDICES|TRENTADUES|SEMIFIN|PLAY.?OFF|PRIMAVERA)/i;
-  function games(sh, relax) {   // relax: fogli di playoff, gara riconosciuta anche senza il "-" in K
+  function games(sh, relax) {   // gara riconosciuta dal "-" in K oppure, se K e' vuota (trattino cancellato), da entrambe le squadre (C ed E) compilate; relax: fogli di playoff, basta una squadra o un risultato
     const out = []; let bar = '', rk = '', fase = 'Andata', rt = '', pof = false, lastG = -9;
     const rows = [...sh.cells.keys()].sort((a, b) => a - b);
     for (const r of rows) {
@@ -1589,7 +1602,7 @@ function extract(M, opts) {
       if (typeof a === 'string' && /^\d+[A-Z]{1,3}$/i.test(a.trim())) bar = a.trim().replace(/^\d+/, '').toUpperCase();
       { const bt = str(get(sh, r, 2));   // barra di sezione del playoff (QUARTI DI FINALE, FINALE 3°-4° POSTO...)
         if (r !== lastG + 1 && str(a) !== 'Gara N.' && bt && PO_RT.test(bt) && (str(get(sh, r + 1, 1)) === 'Gara N.' || str(get(sh, r + 2, 1)) === 'Gara N.')) { rt = bt; pof = true; } }
-      if (str(get(sh, r - 1, 1)) === 'Gara N.' && (get(sh, r, 11) === '-' || (relax && (str(get(sh, r, 3)) || str(get(sh, r, 5)) || typeof get(sh, r, 10) === 'number' || typeof get(sh, r, 12) === 'number') && !PO_RT.test(str(get(sh, r, 2)))))) {
+      if (str(get(sh, r - 1, 1)) === 'Gara N.' && (get(sh, r, 11) === '-' || (str(get(sh, r, 3)) && str(get(sh, r, 5)) && !str(get(sh, r, 11)) && str(get(sh, r, 12)) !== '-' && !PO_RT.test(str(get(sh, r, 2)))) || (relax && (str(get(sh, r, 3)) || str(get(sh, r, 5)) || typeof get(sh, r, 10) === 'number' || typeof get(sh, r, 12) === 'number') && !PO_RT.test(str(get(sh, r, 2)))))) {
         lastG = r;
         out.push({ row: r, num: get(sh, r, 1), a: get(sh, r, 3), b: get(sh, r, 5), d: typeof get(sh, r, 6) === 'number' ? get(sh, r, 6) : typeof get(sh, r, 7) === 'number' ? Math.floor(get(sh, r, 7)) + (typeof get(sh, r, 8) === 'number' ? get(sh, r, 8) % 1 : 0) : (str(get(sh, r, 7)) || undefined), c: get(sh, r + 1, 9), ra: get(sh, r, 10), rb: get(sh, r, 12), bar, rk, fase, vtxt: str(get(sh, r + 1, 2)), nameA: str(get(sh, r, 2)), nameB: str(get(sh, r, 4)), fa: sh.fx ? sh.fx.get(r * 1000 + 2) : undefined, fb: sh.fx ? sh.fx.get(r * 1000 + 4) : undefined, rt, po: pof });
       }
@@ -1618,7 +1631,7 @@ function extract(M, opts) {
     if (!L) { calRef.push(null); continue; }
     const k = letters.indexOf(L); const i = ++nGir[L];
     const rkey = g.sheet + '|' + g.rk, RM = RK[L] = RK[L] || new Map(); if (!RM.has(rkey)) RM.set(rkey, RM.size + 1);
-    const o = { t: 'gara', g: NEWL[k], i, r: RM.get(rkey), f: g.fase, nota: (!str(g.c) && g.vtxt) ? g.vtxt : undefined, a: codeMap[str(g.a)] || '', b: codeMap[str(g.b)] || '', d: minutes(g.d), c: vmap(g.c), ra: g.ra === undefined ? '' : g.ra, rb: g.rb === undefined ? '' : g.rb };
+    const o = { t: 'gara', g: NEWL[k], i, r: RM.get(rkey), f: g.fase, nota: [(!str(g.c) && g.vtxt) ? g.vtxt : '', ...[g.a, g.b].map(x => phTeam[str(x)] ? phTxt(phTeam[str(x)]) : ''), phField[str(g.c)] ? phTxt(phField[str(g.c)]) : ''].filter((x, j, A) => x && A.indexOf(x) === j).join('. ') || undefined, ph: !!(phTeam[str(g.a)] || phTeam[str(g.b)] || phField[str(g.c)]), a: codeMap[str(g.a)] || '', b: codeMap[str(g.b)] || '', d: minutes(g.d), c: vmap(g.c), ra: g.ra === undefined ? '' : g.ra, rb: g.rb === undefined ? '' : g.rb };
     righe.push(o); calRef.push(o);
     (uniS[g.sheet] = uniS[g.sheet] || new Set()).add(NEWL[k]);
   }
@@ -1792,7 +1805,7 @@ function extract(M, opts) {
   // fogli Note e Provvedimenti Disciplinari: numero di gara + testo, legati alla gara (seguono la nuova numerazione)
   const xn = { nota: [0, 0], prov: [0, 0] };
   // note scritte nella riga del campo (senza codice campo): vanno nel foglio Note
-  const vNotes = righe.filter(o => o.t === 'gara' && o.nota).length;
+  const vNotes = righe.filter(o => o.t === 'gara' && o.nota && !o.ph).length, phNotes = righe.filter(o => o.t === 'gara' && o.ph).length;
   for (const [nm, key] of [['Note', 'nota'], ['Provvedimenti Disciplinari', 'prov']]) {
     const sh = S[nm] || (key === 'prov' ? opts.provSheet : null); if (!sh) continue; xn[key].sheet = true;   // provvedimenti anche da una cartella di lavoro a parte
     for (let r = 2; r <= sh.maxRow; r++) { const num = get(sh, r, 1), txt = str(get(sh, r, 2)); if (!txt) continue; const tgt = typeof num === 'number' ? byNum.get(num) : null; if (tgt) { tgt[key] = tgt[key] ? tgt[key] + ' ' + txt : txt; xn[key][0]++; } else xn[key][1]++; }
@@ -1829,6 +1842,7 @@ function extract(M, opts) {
   const gironi = letters.map((L, k) => ({ name: names[k], nt: Math.max(3, byGir[L].length), color: colors[k], sigla: NEWL[k] }));
   // ---- avvisi: cose da correggere a mano nel file di origine prima di procedere ----
   const warn = [];
+  if (phantom.length) warn.push('righe dell\'elenco squadre non importate perche\' sono segnaposto mai usati in una gara: ' + phantom.map(n => '"' + n + '"').join(', ') + '.');
   const nG = n => n === 1 ? '1 gara' : n + ' gare';
   { const sh = calSheets.map(n => S[n]);
     // colonne spostate: righe "Gara N." senza il trattino del risultato in colonna K
@@ -1879,6 +1893,7 @@ function extract(M, opts) {
     'Designazioni lette: ' + desN + (desSkip ? ' (' + desSkip + ' senza gara corrispondente)' : '') + '; arbitri: ' + narb + '; ufficiali di campo: ' + nudc + '.'
   ];
   if (forfNote) report.push(forfNote);
+  if (phNotes) report.push(phNotes + (phNotes === 1 ? ' gara' : ' gare') + ' con un segnaposto al posto della squadra o del campo (' + [...new Set([...Object.values(phTeam), ...Object.values(phField)].map(x => '"' + x + '"'))].join(', ') + '): le squadre segnaposto restano vuote, i campi segnaposto diventano TBD (da definire) e il testo va nel foglio Note.');
   if (vNotes) report.push(vNotes + ' note scritte nella riga del campo (senza codice campo) portate nel foglio Note.');
   if (B1 && B1.bye) report.push('Playoff a ' + B1.size + ' squadre con ' + B1.bye + ' BYE: le teste di serie migliori passano il primo turno senza giocare; risultati del tabellone collegati alle gare del nuovo modello' + (B1.miss ? ' (' + B1.miss + ' gare non collegate, da reinserire)' : '') + '.');
   if (calPO.length) report.push(nG(calPO.length) + ' di playoff scritte nel foglio del calendario: non contate come gare di girone' + (B1 && mainP && mainP.cal ? ', usate per il tabellone del playoff' : '') + '.');
@@ -1938,7 +1953,7 @@ function extract(M, opts) {
     }
     params[3] = gironi.map(g => g.sigla).join(','); params[9] = gironi.map(g => g.name).join(',');
   }
-  return { tipo, gironi, params, po, pp, narb, nudc, warn, ucl, note: !!xn.nota.sheet || vNotes > 0, prov: !!xn.prov.sheet || !!S['Collegamento Provvedimenti'], provx: !!S['Collegamento Provvedimenti'] || !!opts.provSheet, uni: uni.join('\n'), data: { origine: tipo, righe }, report };
+  return { tipo, gironi, params, po, pp, narb, nudc, warn, ucl, note: !!xn.nota.sheet || vNotes > 0 || phNotes > 0, prov: !!xn.prov.sheet || !!S['Collegamento Provvedimenti'], provx: !!S['Collegamento Provvedimenti'] || !!opts.provSheet, uni: uni.join('\n'), data: { origine: tipo, righe }, report };
 }
 
 // ---------------- fusione di piu' file ----------------
@@ -1992,6 +2007,11 @@ function merge(list) {
   const arb = new Map(), udc = new Map();
   const seen = new Map();
   let off = 0, params = null; const usedS = new Set();
+  // piu' di 8 campi neutri in totale: i campi uguali (nome e mappa) a quello di una squadra vanno su quel campo e i posti PO
+  // vanno prima ai campi usati nelle gare; si decide alla fine (TOK = segnaposto provvisorio nelle gare)
+  const nkey = o => (o.n || '').trim().toLowerCase() + '|' + (o.l || '').trim();
+  const PRIO = new Set(list.flatMap(X => X.data.righe.filter(o => o.t === 'campo' && /^PO\d+$/.test(o.k)).map(nkey))).size > 8;
+  const TOK = '\u0001', NEU = new Map();
   list.forEach((X, j) => {
     const n = X.gironi.length;
     if (off + n > 26) throw new Error('Fusione: piu\' di 26 gironi in totale.');
@@ -2002,6 +2022,7 @@ function merge(list) {
     const poMap = {};
     for (const o of X.data.righe) if (o.t === 'campo' && (/^PO\d+$/.test(o.k) || o.k === 'TBD')) {
       if (o.k === 'TBD') { poMap.TBD = 'TBD'; if (!righe.some(x => x.t === 'campo' && x.k === 'TBD')) righe.push(Object.assign({}, o)); continue; }
+      if (PRIO) { const key = nkey(o); if (!NEU.has(key)) NEU.set(key, { o, used: false }); if (X.data.righe.some(g => g.t === 'gara' && String(g.c == null ? '' : g.c).trim() === o.k)) NEU.get(key).used = true; poMap[o.k] = TOK + key; continue; }
       const key = (o.n || '').trim().toLowerCase() + '|' + (o.l || '').trim();
       if (!POn[key]) { if (poFree > 8) { warn.push('campo neutro "' + o.n + '" senza posto libero (massimo 8)'); continue; } POn[key] = 'PO' + poFree++; righe.push(Object.assign({}, o, { k: POn[key] })); }
       poMap[o.k] = POn[key];
@@ -2017,9 +2038,19 @@ function merge(list) {
     if (X.uni) for (const line of X.uni.split('\n')) if (line) uni.push(line.split(',').map(L => smap[L] || L).join(','));
     if (!params) params = X.params.slice();
     report.push('File ' + (j + 1) + ' (' + X.file + '): ' + X.tipo + ', ' + n + ' giron' + (n > 1 ? 'i' : 'e') + ' -> ' + newS.join(', ') + ', ' + X.data.righe.filter(o => o.t === 'sq').length + ' squadre, ' + X.data.righe.filter(o => o.t === 'gara').length + ' gare' + (X.po && X.po.squadre ? ' (playoff del file non importato)' : '') + '.');
-    for (const l of X.report) if (/^(Punteggio forfait|Campi non legati)/.test(l)) report.push('File ' + (j + 1) + ': ' + l);
+    for (const l of X.report) if (/^(Punteggio forfait|Campi non legati|\d+ gar[ae] con un segnaposto)/.test(l)) report.push('File ' + (j + 1) + ': ' + l);
     off += n;
   });
+  if (PRIO) {
+    const teamF = new Map(); for (const o of righe) if (o.t === 'campo' && !/^PO\d+$/.test(o.k) && o.k !== 'TBD' && (o.n || o.l) && !teamF.has(nkey(o))) teamF.set(nkey(o), o.k);
+    const tgt = new Map(), same = [], cand = [...NEU].filter(([k]) => !teamF.has(k));
+    for (const [k] of NEU) if (teamF.has(k)) { tgt.set(k, teamF.get(k)); same.push('"' + NEU.get(k).o.n + '" -> ' + teamF.get(k)); }
+    for (const [k, v] of cand.filter(([, v]) => v.used).concat(cand.filter(([, v]) => !v.used))) {
+      if (poFree > 8) { warn.push('campo neutro "' + v.o.n + '" ' + (v.used ? 'senza posto libero (massimo 8): le sue gare restano senza campo' : 'non usato in nessuna gara e senza posto libero: tralasciato')); continue; }
+      tgt.set(k, 'PO' + poFree); righe.push(Object.assign({}, v.o, { k: 'PO' + poFree++ })); }
+    for (const o of righe) if (o.t === 'gara' && String(o.c || '').startsWith(TOK)) o.c = tgt.get(o.c.slice(1)) || '';
+    if (same.length) report.push('Campi neutri uguali al campo di una squadra (stesso nome e mappa), uniti a quello: ' + same.join(', ') + '.');
+  }
   let i = 0; for (const o of arb.values()) righe.push(Object.assign({}, o, { i: ++i }));
   let u = 0; for (const o of udc.values()) righe.push(Object.assign({}, o, { i: ++u }));
   const LET = gironi.map(g => g.sigla);
